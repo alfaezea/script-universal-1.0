@@ -133,5 +133,5 @@ end
 
 print("✅ Módulo Aimbot carregado!")
 
--- 🔥 LINHA MÁGICA: RETORNA O MÓDULO
+-- LINHA MÁGICA: RETORNA O MÓDULO
 return AimbotModule
