@@ -10,7 +10,7 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-getgenv().AimbotModule = {
+local AimbotModule = {
     Settings = {
         Enabled = false,
         TeamCheck = true,
@@ -30,7 +30,7 @@ getgenv().AimbotModule = {
     FOVCircle = Drawing.new("Circle")
 }
 
-local A = getgenv().AimbotModule
+local A = AimbotModule
 
 -- Configurar FOV
 A.FOVCircle.Visible = false
@@ -129,7 +129,9 @@ A.SetShowFOV = function(state) A.Settings.ShowFOV = state end
 A.Exit = function()
     for _, conn in pairs(A.Connections) do conn:Disconnect() end
     A.FOVCircle:Remove()
-    getgenv().AimbotModule = nil
 end
 
 print("✅ Módulo Aimbot carregado!")
+
+-- 🔥 LINHA MÁGICA: RETORNA O MÓDULO
+return AimbotModule
