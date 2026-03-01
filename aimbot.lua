@@ -1,79 +1,111 @@
 --[[
-    ESP MODULE - VERSÃO FUNCIONAL
+    AIMBOT MODULE - VERSÃO FINAL FUNCIONAL
 ]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local ESPModule = {
+local AimbotModule = {
     Enabled = false,
+    Running = false,
     Settings = {
-        TeamCheck = true,
-        ShowName = true,
-        TextColor = Color3.fromRGB(255, 255, 255)
+        FOV = 120,
+        ShowFOV = true,
+        FOVColor = Color3.fromRGB(0, 255, 255),
+        Smoothness = 0.3
     },
-    Drawings = {}
+    FOVCircle = Drawing.new("Circle")
 }
 
-local function WorldToScreen(pos)
-    local v, onScreen = Camera:WorldToViewportPoint(pos)
-    return Vector2.new(v.X, v.Y), onScreen
+-- Configurar FOV
+AimbotModule.FOVCircle.Visible = false
+AimbotModule.FOVCircle.Thickness = 1.5
+AimbotModule.FOVCircle.Filled = false
+AimbotModule.FOVCircle.NumSides = 32
+AimbotModule.FOVCircle.Radius = AimbotModule.Settings.FOV
+AimbotModule.FOVCircle.Color = AimbotModule.Settings.FOVColor
+AimbotModule.FOVCircle.Transparency = 0.7
+
+local function GetMousePos()
+    return Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+end
+
+local function GetClosestPlayer()
+    local closest = nil
+    local closestDist = AimbotModule.Settings.FOV
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local head = player.Character.Head
+            local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+            
+            if onScreen then
+                local dist = (GetMousePos() - Vector2.new(screenPos.X, screenPos.Y)).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closest = player
+                end
+            end
+        end
+    end
+    return closest
 end
 
 -- Loop principal
 RunService.RenderStepped:Connect(function()
     -- Só executa se ativado
-    if not ESPModule.Enabled then
-        -- Esconde todos os drawings
-        for _, drawings in pairs(ESPModule.Drawings) do
-            for _, d in pairs(drawings) do
-                d.Visible = false
+    if AimbotModule.Enabled then
+        -- Mostrar FOV
+        if AimbotModule.Settings.ShowFOV then
+            AimbotModule.FOVCircle.Position = GetMousePos()
+            AimbotModule.FOVCircle.Visible = true
+        end
+        
+        -- Aimbot (só se Running = true)
+        if AimbotModule.Running then
+            local target = GetClosestPlayer()
+            if target and target.Character and target.Character:FindFirstChild("Head") then
+                local head = target.Character.Head
+                local targetPos = head.Position
+                local currentPos = Camera.CFrame.Position
+                Camera.CFrame = CFrame.new(currentPos, targetPos)
             end
         end
-        return
+    else
+        AimbotModule.FOVCircle.Visible = false
     end
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-            local head = player.Character.Head
-            local headPos, onScreen = WorldToScreen(head.Position + Vector3.new(0, 0.5, 0))
-            
-            if onScreen then
-                -- Criar drawing se não existir
-                if not ESPModule.Drawings[player] then
-                    ESPModule.Drawings[player] = {
-                        Name = Drawing.new("Text")
-                    }
-                    local nameText = ESPModule.Drawings[player].Name
-                    nameText.Size = 14
-                    nameText.Center = true
-                    nameText.Outline = true
-                    nameText.OutlineColor = Color3.fromRGB(0, 0, 0)
-                end
-                
-                -- Atualizar e mostrar
-                local nameText = ESPModule.Drawings[player].Name
-                nameText.Visible = true
-                nameText.Text = player.Name
-                nameText.Position = Vector2.new(headPos.X, headPos.Y - 20)
-                nameText.Color = ESPModule.Settings.TextColor
-            else
-                -- Esconder se não estiver na tela
-                if ESPModule.Drawings[player] then
-                    ESPModule.Drawings[player].Name.Visible = false
-                end
-            end
-        end
+end)
+
+-- Inputs
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        AimbotModule.Running = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        AimbotModule.Running = false
     end
 end)
 
 -- Funções para GUI
-ESPModule.SetEnabled = function(state)
-    ESPModule.Enabled = state
-    print("👁️ ESP SetEnabled:", state)
+AimbotModule.SetEnabled = function(state)
+    AimbotModule.Enabled = state
+    print("🎯 Aimbot " .. (state and "ATIVADO" or "DESATIVADO"))
 end
 
-print("✅ Módulo ESP FUNCIONAL carregado!")
-return ESPModule
+AimbotModule.SetFOV = function(value)
+    AimbotModule.Settings.FOV = value
+    AimbotModule.FOVCircle.Radius = value
+end
+
+AimbotModule.SetShowFOV = function(state)
+    AimbotModule.Settings.ShowFOV = state
+end
+
+print("✅ Módulo Aimbot FUNCIONAL carregado!")
+return AimbotModule
