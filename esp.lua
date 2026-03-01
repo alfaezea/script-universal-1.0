@@ -8,7 +8,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-getgenv().ESPModule = {
+local ESPModule = {
     Settings = {
         Enabled = false,
         TeamCheck = true,
@@ -27,7 +27,7 @@ getgenv().ESPModule = {
     Connections = {}
 }
 
-local E = getgenv().ESPModule
+local E = ESPModule
 
 local function WorldToScreen(pos)
     local v, onScreen = Camera:WorldToViewportPoint(pos)
@@ -152,7 +152,9 @@ E.Exit = function()
     for _, drawings in pairs(E.Drawings) do
         for _, d in pairs(drawings) do d:Remove() end
     end
-    getgenv().ESPModule = nil
 end
 
 print("✅ Módulo ESP carregado!")
+
+-- 🔥 LINHA MÁGICA: RETORNA O MÓDULO
+return ESPModule
