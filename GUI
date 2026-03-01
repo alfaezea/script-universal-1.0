@@ -1,0 +1,641 @@
+--[[
+    GOLD STYLE GUI - IDÊNTICA AO SEU MODELO
+    By: DeepSeek
+]]
+
+-- Carregar módulos (SUBSTITUA PELOS SEUS LINKS)
+local Aimbot = loadstring(game:HttpGet("https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/aimbot.lua"))()
+local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/esp.lua"))()
+local Universal = getgenv().UniversalCheat or {}
+
+-- ========== GUI PRINCIPAL ==========
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "GoldGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Frame principal (400x500)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 400, 0, 500)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Cantos arredondados
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
+
+-- Sombra
+local Shadow = Instance.new("ImageLabel")
+Shadow.Size = UDim2.new(1, 20, 1, 20)
+Shadow.Position = UDim2.new(0, -10, 0, -10)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxassetid://1316045217"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.6
+Shadow.ScaleType = Enum.ScaleType.Slice
+Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+Shadow.Parent = MainFrame
+
+-- ========== TOPO (ÍCONE E TÍTULO) ==========
+local TopFrame = Instance.new("Frame")
+TopFrame.Size = UDim2.new(1, 0, 0, 50)
+TopFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+TopFrame.BorderSizePixel = 0
+TopFrame.Parent = MainFrame
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 8)
+TopCorner.Parent = TopFrame
+
+local GoldIcon = Instance.new("TextLabel")
+GoldIcon.Size = UDim2.new(0, 30, 0, 30)
+GoldIcon.Position = UDim2.new(0, 10, 0, 10)
+GoldIcon.BackgroundTransparency = 1
+GoldIcon.Text = "🥇"
+GoldIcon.TextSize = 20
+GoldIcon.TextColor3 = Color3.fromRGB(255, 215, 0)
+GoldIcon.Parent = TopFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0, 100, 0, 30)
+Title.Position = UDim2.new(0, 45, 0, 10)
+Title.BackgroundTransparency = 1
+Title.Text = "gold™"
+Title.TextColor3 = Color3.fromRGB(255, 215, 0)
+Title.TextSize = 18
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Font = Enum.Font.GothamBold
+Title.Parent = TopFrame
+
+-- Barra de pesquisa
+local SearchBar = Instance.new("Frame")
+SearchBar.Size = UDim2.new(0, 150, 0, 30)
+SearchBar.Position = UDim2.new(1, -160, 0, 10)
+SearchBar.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+SearchBar.BorderSizePixel = 0
+SearchBar.Parent = TopFrame
+
+local SearchCorner = Instance.new("UICorner")
+SearchCorner.CornerRadius = UDim.new(0, 15)
+SearchCorner.Parent = SearchBar
+
+local SearchIcon = Instance.new("TextLabel")
+SearchIcon.Size = UDim2.new(0, 30, 1, 0)
+SearchIcon.BackgroundTransparency = 1
+SearchIcon.Text = "🔍"
+SearchIcon.TextColor3 = Color3.fromRGB(150, 150, 150)
+SearchIcon.TextSize = 14
+SearchIcon.Parent = SearchBar
+
+local SearchText = Instance.new("TextLabel")
+SearchText.Size = UDim2.new(1, -30, 1, 0)
+SearchText.Position = UDim2.new(0, 30, 0, 0)
+SearchText.BackgroundTransparency = 1
+SearchText.Text = "Search"
+SearchText.TextColor3 = Color3.fromRGB(150, 150, 150)
+SearchText.TextSize = 12
+SearchText.TextXAlignment = Enum.TextXAlignment.Left
+SearchText.Font = Enum.Font.Gotham
+SearchText.Parent = SearchBar
+
+-- ========== CONTEÚDO ==========
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, -20, 1, -70)
+ContentFrame.Position = UDim2.new(0, 10, 0, 60)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = MainFrame
+
+-- DASHBOARD
+local DashboardLabel = Instance.new("TextLabel")
+DashboardLabel.Size = UDim2.new(1, 0, 0, 30)
+DashboardLabel.BackgroundTransparency = 1
+DashboardLabel.Text = "Dashboard"
+DashboardLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+DashboardLabel.TextSize = 14
+DashboardLabel.TextXAlignment = Enum.TextXAlignment.Left
+DashboardLabel.Font = Enum.Font.GothamBold
+DashboardLabel.Parent = ContentFrame
+
+-- Linha separadora
+local Line = Instance.new("Frame")
+Line.Size = UDim2.new(1, 0, 0, 1)
+Line.Position = UDim2.new(0, 0, 0, 30)
+Line.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+Line.BorderSizePixel = 0
+Line.Parent = ContentFrame
+
+-- ========== MOUSELOCK / CAMLOCK (TOGGLES) ==========
+local TogglesFrame = Instance.new("Frame")
+TogglesFrame.Size = UDim2.new(1, 0, 0, 30)
+TogglesFrame.Position = UDim2.new(0, 0, 0, 40)
+TogglesFrame.BackgroundTransparency = 1
+TogglesFrame.Parent = ContentFrame
+
+local MouseLockLabel = Instance.new("TextLabel")
+MouseLockLabel.Size = UDim2.new(0, 100, 1, 0)
+MouseLockLabel.BackgroundTransparency = 1
+MouseLockLabel.Text = "MouseLock"
+MouseLockLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+MouseLockLabel.TextSize = 13
+MouseLockLabel.TextXAlignment = Enum.TextXAlignment.Left
+MouseLockLabel.Font = Enum.Font.Gotham
+MouseLockLabel.Parent = TogglesFrame
+
+local MouseLockToggle = Instance.new("TextButton")
+MouseLockToggle.Size = UDim2.new(0, 40, 0, 20)
+MouseLockToggle.Position = UDim2.new(0, 100, 0, 5)
+MouseLockToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+MouseLockToggle.BorderSizePixel = 0
+MouseLockToggle.Text = "OFF"
+MouseLockToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+MouseLockToggle.TextSize = 10
+MouseLockToggle.Font = Enum.Font.GothamBold
+MouseLockToggle.Parent = TogglesFrame
+
+local MouseLockCorner = Instance.new("UICorner")
+MouseLockCorner.CornerRadius = UDim.new(0, 4)
+MouseLockCorner.Parent = MouseLockToggle
+
+local CamLockLabel = Instance.new("TextLabel")
+CamLockLabel.Size = UDim2.new(0, 100, 1, 0)
+CamLockLabel.Position = UDim2.new(0, 150, 0, 0)
+CamLockLabel.BackgroundTransparency = 1
+CamLockLabel.Text = "Camlock"
+CamLockLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+CamLockLabel.TextSize = 13
+CamLockLabel.TextXAlignment = Enum.TextXAlignment.Left
+CamLockLabel.Font = Enum.Font.Gotham
+CamLockLabel.Parent = TogglesFrame
+
+local CamLockToggle = Instance.new("TextButton")
+CamLockToggle.Size = UDim2.new(0, 40, 0, 20)
+CamLockToggle.Position = UDim2.new(0, 210, 0, 5)
+CamLockToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+CamLockToggle.BorderSizePixel = 0
+CamLockToggle.Text = "OFF"
+CamLockToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+CamLockToggle.TextSize = 10
+CamLockToggle.Font = Enum.Font.GothamBold
+CamLockToggle.Parent = TogglesFrame
+
+local CamLockCorner = Instance.new("UICorner")
+CamLockCorner.CornerRadius = UDim.new(0, 4)
+CamLockCorner.Parent = CamLockToggle
+
+-- ========== UNIVERSAL SECTION ==========
+local UniversalLabel = Instance.new("TextLabel")
+UniversalLabel.Size = UDim2.new(1, 0, 0, 30)
+UniversalLabel.Position = UDim2.new(0, 0, 0, 75)
+UniversalLabel.BackgroundTransparency = 1
+UniversalLabel.Text = "Universal"
+UniversalLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+UniversalLabel.TextSize = 14
+UniversalLabel.TextXAlignment = Enum.TextXAlignment.Left
+UniversalLabel.Font = Enum.Font.GothamBold
+UniversalLabel.Parent = ContentFrame
+
+-- Smoothness slider
+local SmoothnessFrame = Instance.new("Frame")
+SmoothnessFrame.Size = UDim2.new(1, 0, 0, 30)
+SmoothnessFrame.Position = UDim2.new(0, 0, 0, 105)
+SmoothnessFrame.BackgroundTransparency = 1
+SmoothnessFrame.Parent = ContentFrame
+
+local SmoothnessLabel = Instance.new("TextLabel")
+SmoothnessLabel.Size = UDim2.new(0, 150, 1, 0)
+SmoothnessLabel.BackgroundTransparency = 1
+SmoothnessLabel.Text = "Smoothness:0%"
+SmoothnessLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+SmoothnessLabel.TextSize = 13
+SmoothnessLabel.TextXAlignment = Enum.TextXAlignment.Left
+SmoothnessLabel.Font = Enum.Font.Gotham
+SmoothnessLabel.Parent = SmoothnessFrame
+
+local SmoothnessSlider = Instance.new("Frame")
+SmoothnessSlider.Size = UDim2.new(0, 150, 0, 4)
+SmoothnessSlider.Position = UDim2.new(0, 150, 0, 12)
+SmoothnessSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+SmoothnessSlider.BorderSizePixel = 0
+SmoothnessSlider.Parent = SmoothnessFrame
+
+local SmoothnessFill = Instance.new("Frame")
+SmoothnessFill.Size = UDim2.new(0, 0, 1, 0)
+SmoothnessFill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+SmoothnessFill.BorderSizePixel = 0
+SmoothnessFill.Parent = SmoothnessSlider
+
+-- Enable Mouselock toggle
+local MouselockEnableFrame = Instance.new("Frame")
+MouselockEnableFrame.Size = UDim2.new(1, 0, 0, 30)
+MouselockEnableFrame.Position = UDim2.new(0, 0, 0, 135)
+MouselockEnableFrame.BackgroundTransparency = 1
+MouselockEnableFrame.Parent = ContentFrame
+
+local MouselockEnableLabel = Instance.new("TextLabel")
+MouselockEnableLabel.Size = UDim2.new(0, 150, 1, 0)
+MouselockEnableLabel.BackgroundTransparency = 1
+MouselockEnableLabel.Text = "Enable Mouselock"
+MouselockEnableLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+MouselockEnableLabel.TextSize = 13
+MouselockEnableLabel.TextXAlignment = Enum.TextXAlignment.Left
+MouselockEnableLabel.Font = Enum.Font.Gotham
+MouselockEnableLabel.Parent = MouselockEnableFrame
+
+local MouselockEnableToggle = Instance.new("TextButton")
+MouselockEnableToggle.Size = UDim2.new(0, 40, 0, 20)
+MouselockEnableToggle.Position = UDim2.new(0, 150, 0, 5)
+MouselockEnableToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+MouselockEnableToggle.BorderSizePixel = 0
+MouselockEnableToggle.Text = "OFF"
+MouselockEnableToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+MouselockEnableToggle.TextSize = 10
+MouselockEnableToggle.Font = Enum.Font.GothamBold
+MouselockEnableToggle.Parent = MouselockEnableFrame
+
+local MouselockEnableCorner = Instance.new("UICorner")
+MouselockEnableCorner.CornerRadius = UDim.new(0, 4)
+MouselockEnableCorner.Parent = MouselockEnableToggle
+
+-- Target Part dropdown
+local TargetPartFrame = Instance.new("Frame")
+TargetPartFrame.Size = UDim2.new(1, 0, 0, 30)
+TargetPartFrame.Position = UDim2.new(0, 0, 0, 165)
+TargetPartFrame.BackgroundTransparency = 1
+TargetPartFrame.Parent = ContentFrame
+
+local TargetPartLabel = Instance.new("TextLabel")
+TargetPartLabel.Size = UDim2.new(0, 150, 1, 0)
+TargetPartLabel.BackgroundTransparency = 1
+TargetPartLabel.Text = "Target Part"
+TargetPartLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+TargetPartLabel.TextSize = 13
+TargetPartLabel.TextXAlignment = Enum.TextXAlignment.Left
+TargetPartLabel.Font = Enum.Font.Gotham
+TargetPartLabel.Parent = TargetPartFrame
+
+local TargetPartDropdown = Instance.new("TextButton")
+TargetPartDropdown.Size = UDim2.new(0, 100, 0, 25)
+TargetPartDropdown.Position = UDim2.new(0, 150, 0, 2.5)
+TargetPartDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+TargetPartDropdown.BorderSizePixel = 0
+TargetPartDropdown.Text = "Head"
+TargetPartDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetPartDropdown.TextSize = 12
+TargetPartDropdown.Font = Enum.Font.Gotham
+TargetPartDropdown.Parent = TargetPartFrame
+
+local TargetPartCorner = Instance.new("UICorner")
+TargetPartCorner.CornerRadius = UDim.new(0, 4)
+TargetPartCorner.Parent = TargetPartDropdown
+
+-- Aimlock Universal toggle
+local AimlockFrame = Instance.new("Frame")
+AimlockFrame.Size = UDim2.new(1, 0, 0, 30)
+AimlockFrame.Position = UDim2.new(0, 0, 0, 195)
+AimlockFrame.BackgroundTransparency = 1
+AimlockFrame.Parent = ContentFrame
+
+local AimlockLabel = Instance.new("TextLabel")
+AimlockLabel.Size = UDim2.new(0, 150, 1, 0)
+AimlockLabel.BackgroundTransparency = 1
+AimlockLabel.Text = "Aimlock (Universal)"
+AimlockLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+AimlockLabel.TextSize = 13
+AimlockLabel.TextXAlignment = Enum.TextXAlignment.Left
+AimlockLabel.Font = Enum.Font.Gotham
+AimlockLabel.Parent = AimlockFrame
+
+local AimlockToggle = Instance.new("TextButton")
+AimlockToggle.Size = UDim2.new(0, 40, 0, 20)
+AimlockToggle.Position = UDim2.new(0, 150, 0, 5)
+AimlockToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+AimlockToggle.BorderSizePixel = 0
+AimlockToggle.Text = "OFF"
+AimlockToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimlockToggle.TextSize = 10
+AimlockToggle.Font = Enum.Font.GothamBold
+AimlockToggle.Parent = AimlockFrame
+
+local AimlockCorner = Instance.new("UICorner")
+AimlockCorner.CornerRadius = UDim.new(0, 4)
+AimlockCorner.Parent = AimlockToggle
+
+-- Show FOV Circle toggle
+local ShowFOVFrame = Instance.new("Frame")
+ShowFOVFrame.Size = UDim2.new(1, 0, 0, 30)
+ShowFOVFrame.Position = UDim2.new(0, 0, 0, 225)
+ShowFOVFrame.BackgroundTransparency = 1
+ShowFOVFrame.Parent = ContentFrame
+
+local ShowFOVLabel = Instance.new("TextLabel")
+ShowFOVLabel.Size = UDim2.new(0, 150, 1, 0)
+ShowFOVLabel.BackgroundTransparency = 1
+ShowFOVLabel.Text = "Show FOV Circle"
+ShowFOVLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+ShowFOVLabel.TextSize = 13
+ShowFOVLabel.TextXAlignment = Enum.TextXAlignment.Left
+ShowFOVLabel.Font = Enum.Font.Gotham
+ShowFOVLabel.Parent = ShowFOVFrame
+
+local ShowFOVToggle = Instance.new("TextButton")
+ShowFOVToggle.Size = UDim2.new(0, 40, 0, 20)
+ShowFOVToggle.Position = UDim2.new(0, 150, 0, 5)
+ShowFOVToggle.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+ShowFOVToggle.BorderSizePixel = 0
+ShowFOVToggle.Text = "OFF"
+ShowFOVToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ShowFOVToggle.TextSize = 10
+ShowFOVToggle.Font = Enum.Font.GothamBold
+ShowFOVToggle.Parent = ShowFOVFrame
+
+local ShowFOVCorner = Instance.new("UICorner")
+ShowFOVCorner.CornerRadius = UDim.new(0, 4)
+ShowFOVCorner.Parent = ShowFOVToggle
+
+-- ========== CHECKBOXES (lado direito) ==========
+local CheckboxesFrame = Instance.new("Frame")
+CheckboxesFrame.Size = UDim2.new(0, 150, 0, 150)
+CheckboxesFrame.Position = UDim2.new(1, -160, 0, 105)
+CheckboxesFrame.BackgroundTransparency = 1
+CheckboxesFrame.Parent = ContentFrame
+
+local function createCheckbox(parent, y, text)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 25)
+    frame.Position = UDim2.new(0, 0, 0, y)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+    
+    local checkbox = Instance.new("TextButton")
+    checkbox.Size = UDim2.new(0, 16, 0, 16)
+    checkbox.Position = UDim2.new(0, 0, 0, 4)
+    checkbox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+    checkbox.BorderSizePixel = 0
+    checkbox.Text = ""
+    checkbox.Parent = frame
+    
+    local checkCorner = Instance.new("UICorner")
+    checkCorner.CornerRadius = UDim.new(0, 3)
+    checkCorner.Parent = checkbox
+    
+    local checkLabel = Instance.new("TextLabel")
+    checkLabel.Size = UDim2.new(1, -20, 1, 0)
+    checkLabel.Position = UDim2.new(0, 20, 0, 0)
+    checkLabel.BackgroundTransparency = 1
+    checkLabel.Text = text
+    checkLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+    checkLabel.TextSize = 12
+    checkLabel.TextXAlignment = Enum.TextXAlignment.Left
+    checkLabel.Font = Enum.Font.Gotham
+    checkLabel.Parent = frame
+    
+    return checkbox
+end
+
+createCheckbox(CheckboxesFrame, 0, "Ignore Walls")
+createCheckbox(CheckboxesFrame, 25, "Target Highlight")
+createCheckbox(CheckboxesFrame, 50, "Enable Camlock")
+createCheckbox(CheckboxesFrame, 75, "Team Check")
+createCheckbox(CheckboxesFrame, 100, "Visible Check")
+
+-- ========== SLIDERS (lado direito) ==========
+local SlidersFrame = Instance.new("Frame")
+SlidersFrame.Size = UDim2.new(0, 180, 0, 120)
+SlidersFrame.Position = UDim2.new(1, -190, 0, 270)
+SlidersFrame.BackgroundTransparency = 1
+SlidersFrame.Parent = ContentFrame
+
+local function createSlider(parent, y, text, value)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 25)
+    frame.Position = UDim2.new(0, 0, 0, y)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 15)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(180, 180, 180)
+    label.TextSize = 11
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
+    
+    local slider = Instance.new("Frame")
+    slider.Size = UDim2.new(1, 0, 0, 4)
+    slider.Position = UDim2.new(0, 0, 0, 18)
+    slider.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
+    slider.BorderSizePixel = 0
+    slider.Parent = frame
+    
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(value/500, 0, 1, 0)
+    fill.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    fill.BorderSizePixel = 0
+    fill.Parent = slider
+end
+
+createSlider(SlidersFrame, 0, "Max Distance:500 studs", 500)
+createSlider(SlidersFrame, 30, "Detection Radius:15°", 15)
+createSlider(SlidersFrame, 60, "Smoothing:3%", 3)
+createSlider(SlidersFrame, 90, "Deadzone:1px", 1)
+
+-- ========== DROPDOWNS (parte inferior) ==========
+local BottomFrame = Instance.new("Frame")
+BottomFrame.Size = UDim2.new(1, -20, 0, 60)
+BottomFrame.Position = UDim2.new(0, 10, 1, -65)
+BottomFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+BottomFrame.BorderSizePixel = 0
+BottomFrame.Parent = ContentFrame
+
+local BottomCorner = Instance.new("UICorner")
+BottomCorner.CornerRadius = UDim.new(0, 6)
+BottomCorner.Parent = BottomFrame
+
+-- Target Part dropdown (inferior)
+local BottomTargetPart = Instance.new("Frame")
+BottomTargetPart.Size = UDim2.new(0, 150, 0, 30)
+BottomTargetPart.Position = UDim2.new(0, 10, 0, 15)
+BottomTargetPart.BackgroundTransparency = 1
+BottomTargetPart.Parent = BottomFrame
+
+local BottomTargetLabel = Instance.new("TextLabel")
+BottomTargetLabel.Size = UDim2.new(1, 0, 0, 15)
+BottomTargetLabel.BackgroundTransparency = 1
+BottomTargetLabel.Text = "Target Part"
+BottomTargetLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+BottomTargetLabel.TextSize = 10
+BottomTargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+BottomTargetLabel.Font = Enum.Font.Gotham
+BottomTargetLabel.Parent = BottomTargetPart
+
+local BottomTargetDropdown = Instance.new("TextButton")
+BottomTargetDropdown.Size = UDim2.new(1, 0, 0, 20)
+BottomTargetDropdown.Position = UDim2.new(0, 0, 0, 15)
+BottomTargetDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+BottomTargetDropdown.BorderSizePixel = 0
+BottomTargetDropdown.Text = "Head"
+BottomTargetDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+BottomTargetDropdown.TextSize = 11
+BottomTargetDropdown.Font = Enum.Font.Gotham
+BottomTargetDropdown.Parent = BottomTargetPart
+
+local BottomTargetCorner = Instance.new("UICorner")
+BottomTargetCorner.CornerRadius = UDim.new(0, 4)
+BottomTargetCorner.Parent = BottomTargetDropdown
+
+-- Target Priority dropdown
+local PriorityFrame = Instance.new("Frame")
+PriorityFrame.Size = UDim2.new(0, 150, 0, 30)
+PriorityFrame.Position = UDim2.new(0, 180, 0, 15)
+PriorityFrame.BackgroundTransparency = 1
+PriorityFrame.Parent = BottomFrame
+
+local PriorityLabel = Instance.new("TextLabel")
+PriorityLabel.Size = UDim2.new(1, 0, 0, 15)
+PriorityLabel.BackgroundTransparency = 1
+PriorityLabel.Text = "Target Priority"
+PriorityLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+PriorityLabel.TextSize = 10
+PriorityLabel.TextXAlignment = Enum.TextXAlignment.Left
+PriorityLabel.Font = Enum.Font.Gotham
+PriorityLabel.Parent = PriorityFrame
+
+local PriorityDropdown = Instance.new("TextButton")
+PriorityDropdown.Size = UDim2.new(1, 0, 0, 20)
+PriorityDropdown.Position = UDim2.new(0, 0, 0, 15)
+PriorityDropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+PriorityDropdown.BorderSizePixel = 0
+PriorityDropdown.Text = "Distance"
+PriorityDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+PriorityDropdown.TextSize = 11
+PriorityDropdown.Font = Enum.Font.Gotham
+PriorityDropdown.Parent = PriorityFrame
+
+local PriorityCorner = Instance.new("UICorner")
+PriorityCorner.CornerRadius = UDim.new(0, 4)
+PriorityCorner.Parent = PriorityDropdown
+
+-- Rodapé com informações
+local Footer = Instance.new("TextLabel")
+Footer.Size = UDim2.new(1, -20, 0, 20)
+Footer.Position = UDim2.new(0, 10, 1, -20)
+Footer.BackgroundTransparency = 1
+Footer.Text = "game:Baseplate | version:DEV | executor:Volt | rating:0/5★ (0)"
+Footer.TextColor3 = Color3.fromRGB(100, 100, 100)
+Footer.TextSize = 9
+Footer.TextXAlignment = Enum.TextXAlignment.Left
+Footer.Font = Enum.Font.Gotham
+Footer.Parent = MainFrame
+
+-- ========== FUNÇÕES DOS BOTÕES ==========
+-- MouseLock toggle
+MouseLockToggle.MouseButton1Click:Connect(function()
+    local state = MouseLockToggle.Text == "OFF"
+    MouseLockToggle.Text = state and "ON" or "OFF"
+    MouseLockToggle.BackgroundColor3 = state and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(60, 60, 70)
+    if Universal and Universal.MouseLock then
+        Universal.MouseLock.Enabled = state
+    end
+end)
+
+-- CamLock toggle
+CamLockToggle.MouseButton1Click:Connect(function()
+    local state = CamLockToggle.Text == "OFF"
+    CamLockToggle.Text = state and "ON" or "OFF"
+    CamLockToggle.BackgroundColor3 = state and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(60, 60, 70)
+end)
+
+-- Enable Mouselock toggle
+MouselockEnableToggle.MouseButton1Click:Connect(function()
+    local state = MouselockEnableToggle.Text == "OFF"
+    MouselockEnableToggle.Text = state and "ON" or "OFF"
+    MouselockEnableToggle.BackgroundColor3 = state and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(60, 60, 70)
+end)
+
+-- Aimlock toggle
+AimlockToggle.MouseButton1Click:Connect(function()
+    local state = AimlockToggle.Text == "OFF"
+    AimlockToggle.Text = state and "ON" or "OFF"
+    AimlockToggle.BackgroundColor3 = state and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(60, 60, 70)
+    if Aimbot and Aimbot.SetEnabled then
+        Aimbot.SetEnabled(state)
+    end
+end)
+
+-- Show FOV toggle
+ShowFOVToggle.MouseButton1Click:Connect(function()
+    local state = ShowFOVToggle.Text == "OFF"
+    ShowFOVToggle.Text = state and "ON" or "OFF"
+    ShowFOVToggle.BackgroundColor3 = state and Color3.fromRGB(0, 100, 0) or Color3.fromRGB(60, 60, 70)
+    if Aimbot and Aimbot.Settings then
+        Aimbot.Settings.ShowFOV = state
+    end
+end)
+
+-- Target Part dropdown (superior)
+TargetPartDropdown.MouseButton1Click:Connect(function()
+    local parts = {"Head", "Torso", "HumanoidRootPart", "UpperTorso"}
+    local current = 1
+    for i, v in ipairs(parts) do
+        if v == TargetPartDropdown.Text then
+            current = i % #parts + 1
+            break
+        end
+    end
+    TargetPartDropdown.Text = parts[current]
+    if Aimbot and Aimbot.SetLockPart then
+        Aimbot.SetLockPart(parts[current])
+    end
+end)
+
+-- Target Part dropdown (inferior)
+BottomTargetDropdown.MouseButton1Click:Connect(function()
+    local parts = {"Head", "Torso", "HumanoidRootPart", "UpperTorso"}
+    local current = 1
+    for i, v in ipairs(parts) do
+        if v == BottomTargetDropdown.Text then
+            current = i % #parts + 1
+            break
+        end
+    end
+    BottomTargetDropdown.Text = parts[current]
+end)
+
+-- Priority dropdown
+PriorityDropdown.MouseButton1Click:Connect(function()
+    local priorities = {"Distance", "Health", "Crosshair"}
+    local current = 1
+    for i, v in ipairs(priorities) do
+        if v == PriorityDropdown.Text then
+            current = i % #priorities + 1
+            break
+        end
+    end
+    PriorityDropdown.Text = priorities[current]
+end)
+
+-- Checkboxes functionality
+for _, checkbox in ipairs(CheckboxesFrame:GetDescendants()) do
+    if checkbox:IsA("TextButton") and checkbox.Text == "" then
+        checkbox.MouseButton1Click:Connect(function()
+            checkbox.BackgroundColor3 = checkbox.BackgroundColor3 == Color3.fromRGB(40, 40, 45) and 
+                Color3.fromRGB(0, 100, 0) or Color3.fromRGB(40, 40, 45)
+        end)
+    end
+end
+
+-- Tecla P para abrir/fechar
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.P then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+print("✅ GOLD GUI CARREGADA! Pressione P para abrir/fechar")
