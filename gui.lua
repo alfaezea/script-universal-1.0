@@ -1,9 +1,8 @@
 --[[
     GOLD STYLE GUI - IDÊNTICA AO SEU MODELO
-    By: DeepSeek
 ]]
 
--- Carregar módulos (SUBSTITUA PELOS SEUS LINKS)
+-- Carregar módulos (AGORA FUNCIONA PORQUE ELES RETORNAM!)
 local Aimbot = loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/main/aimbot.lua"))()
 local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/main/esp.lua"))()
 local Universal = getgenv().UniversalCheat or {}
