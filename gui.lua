@@ -4,8 +4,8 @@
 ]]
 
 -- Carregar módulos (SUBSTITUA PELOS SEUS LINKS)
-local Aimbot = loadstring(game:https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/README.md"))()
-local ESP = https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp"))()
+local Aimbot = loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/main/aimbot.lua"))()
+local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/main/esp.lua"))()
 local Universal = getgenv().UniversalCheat or {}
 
 -- ========== GUI PRINCIPAL ==========
