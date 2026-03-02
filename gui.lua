@@ -58,9 +58,9 @@ end
 -- Carregar Aimbot
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
 
--- Carregar Módulo Diversos (Anti-Spread, No Clip, Infinite Jump)
+-- Carregar Módulo Diversos (URL CORRETA)
 print("🔄 Carregando Módulo Diversos...")
-local diversosScript = game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/diversos.lua") -- SUBSTITUA PELA URL
+local diversosScript = game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/diversos.lua")
 local diversosFunc, diversosErr = loadstring(diversosScript)
 if diversosFunc then
     pcall(diversosFunc)
@@ -146,7 +146,7 @@ ScreenGui.Parent = game:GetService("CoreGui")
 
 -- Frame principal
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 700, 0, 600)  -- Aumentado para comportar mais opções
+MainFrame.Size = UDim2.new(0, 700, 0, 600)
 MainFrame.Position = UDim2.new(0.5, -350, 0.5, -300)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
