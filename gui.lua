@@ -1,22 +1,20 @@
 --[[
 	AirHub by Exunys © CC0 1.0 Universal (2023)
 	https://github.com/Exunys
-	Modificado com aba "Diversos" e FLY FUNCIONAL
+	Modificado com Smoothness e Fly
 ]]
 
 --// Cache
 local loadstring, getgenv, setclipboard, tablefind, UserInputService = loadstring, getgenv, setclipboard, table.find, game:GetService("UserInputService")
 
 --// Loaded check
-if AirHub or AirHubV2Loaded then
-    return
-end
+if AirHub or AirHubV2Loaded then return end
 
 --// Environment
 getgenv().AirHub = {}
 
---// Load Modules
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Aimbot.lua"))()
+--// Load Modules (use os links do seu repositório)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/main/aimbot.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Wall%20Hack.lua"))()
 
 --// Variables
@@ -24,7 +22,7 @@ local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)
 local Aimbot, WallHack = getgenv().AirHub.Aimbot, getgenv().AirHub.WallHack
 local Parts, Fonts, TracersType = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}, {"UI", "System", "Plex", "Monospace"}, {"Bottom", "Center", "Mouse"}
 
--- ========== SISTEMA DE FLY FUNCIONAL ==========
+-- ========== SISTEMA DE FLY ==========
 local Fly = {
     Enabled = false,
     Speed = 50,
@@ -44,89 +42,55 @@ local function ToggleFly(state)
     if not humanoid or not rootPart then return end
     
     if state then
-        -- Ativar fly
         humanoid.PlatformStand = true
         
-        -- Criar BodyGyro para controle de rotação
         Fly.BodyGyro = Instance.new("BodyGyro")
         Fly.BodyGyro.P = 9e4
         Fly.BodyGyro.MaxTorque = Vector3.new(9e4, 9e4, 9e4)
         Fly.BodyGyro.CFrame = rootPart.CFrame
         Fly.BodyGyro.Parent = rootPart
         
-        -- Criar BodyVelocity para movimento
         Fly.BodyVelocity = Instance.new("BodyVelocity")
         Fly.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
         Fly.BodyVelocity.MaxForce = Vector3.new(9e4, 9e4, 9e4)
         Fly.BodyVelocity.Parent = rootPart
         
-        -- Conectar ao RenderStepped para movimento contínuo
         Fly.Connections.RenderStepped = game:GetService("RunService").RenderStepped:Connect(function()
             if not Fly.Enabled then return end
             
             local moveDirection = Vector3.new(0, 0, 0)
             local camera = workspace.CurrentCamera
             
-            -- WASD para movimento
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                moveDirection = moveDirection + camera.CFrame.LookVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                moveDirection = moveDirection - camera.CFrame.LookVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                moveDirection = moveDirection - camera.CFrame.RightVector
-            end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                moveDirection = moveDirection + camera.CFrame.RightVector
-            end
-            -- Espaço para subir
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                moveDirection = moveDirection + Vector3.new(0, 1, 0)
-            end
-            -- Shift para descer
-            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-                moveDirection = moveDirection + Vector3.new(0, -1, 0)
-            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDirection = moveDirection + Vector3.new(0, 1, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDirection = moveDirection + Vector3.new(0, -1, 0) end
             
             if moveDirection.Magnitude > 0 then
                 moveDirection = moveDirection.Unit * Fly.Speed
             end
             
-            if Fly.BodyVelocity then
-                Fly.BodyVelocity.Velocity = moveDirection
-            end
-            if Fly.BodyGyro then
-                Fly.BodyGyro.CFrame = CFrame.new(rootPart.Position, rootPart.Position + camera.CFrame.LookVector)
-            end
+            if Fly.BodyVelocity then Fly.BodyVelocity.Velocity = moveDirection end
+            if Fly.BodyGyro then Fly.BodyGyro.CFrame = CFrame.new(rootPart.Position, rootPart.Position + camera.CFrame.LookVector) end
         end)
         
         Fly.Enabled = true
         print("✅ Fly ATIVADO")
     else
-        -- Desativar fly
         Fly.Enabled = false
-        if Fly.Connections.RenderStepped then
-            Fly.Connections.RenderStepped:Disconnect()
-        end
-        if Fly.BodyGyro then
-            Fly.BodyGyro:Destroy()
-            Fly.BodyGyro = nil
-        end
-        if Fly.BodyVelocity then
-            Fly.BodyVelocity:Destroy()
-            Fly.BodyVelocity = nil
-        end
-        if humanoid then
-            humanoid.PlatformStand = false
-        end
+        if Fly.Connections.RenderStepped then Fly.Connections.RenderStepped:Disconnect() end
+        if Fly.BodyGyro then Fly.BodyGyro:Destroy(); Fly.BodyGyro = nil end
+        if Fly.BodyVelocity then Fly.BodyVelocity:Destroy(); Fly.BodyVelocity = nil end
+        if humanoid then humanoid.PlatformStand = false end
         print("❌ Fly DESATIVADO")
     end
 end
 
 --// Frame
 Library.UnloadCallback = function()
-    ToggleFly(false) -- Desativa fly ao fechar
+    ToggleFly(false)
     Aimbot.Functions:Exit()
     WallHack.Functions:Exit()
     getgenv().AirHub = nil
@@ -156,6 +120,163 @@ local Checks = AimbotTab:CreateSection({ Name = "Checks" })
 local ThirdPerson = AimbotTab:CreateSection({ Name = "Third Person" })
 local FOV_Values = AimbotTab:CreateSection({ Name = "Field Of View", Side = "Right" })
 local FOV_Appearance = AimbotTab:CreateSection({ Name = "FOV Circle Appearance", Side = "Right" })
+
+--// Visuals Sections (WALLHACK)
+local WallHackChecks = VisualsTab:CreateSection({ Name = "Checks" })
+local ESPSettings = VisualsTab:CreateSection({ Name = "ESP Settings" })
+local BoxesSettings = VisualsTab:CreateSection({ Name = "Boxes Settings" })
+local ChamsSettings = VisualsTab:CreateSection({ Name = "Chams Settings" })
+local TracersSettings = VisualsTab:CreateSection({ Name = "Tracers Settings", Side = "Right" })
+local HeadDotsSettings = VisualsTab:CreateSection({ Name = "Head Dots Settings", Side = "Right" })
+local HealthBarSettings = VisualsTab:CreateSection({ Name = "Health Bar Settings", Side = "Right" })
+
+--// Crosshair Sections
+local CrosshairSettings = CrosshairTab:CreateSection({ Name = "Settings" })
+local CrosshairSettings_CenterDot = CrosshairTab:CreateSection({ Name = "Center Dot Settings", Side = "Right" })
+
+--// Diversos Sections
+local FlySection = MiscTab:CreateSection({ Name = "Sistema de Voo" })
+local SpeedSection = MiscTab:CreateSection({ Name = "Configurações", Side = "Right" })
+
+--// Functions Sections
+local FunctionsSection = FunctionsTab:CreateSection({ Name = "Functions" })
+
+-- ========== AIMBOT ==========
+Values:AddToggle({
+	Name = "Enabled",
+	Value = Aimbot.Settings.Enabled,
+	Callback = function(New) Aimbot.Settings.Enabled = New end
+}).Default = Aimbot.Settings.Enabled
+
+Values:AddToggle({
+	Name = "Toggle",
+	Value = Aimbot.Settings.Toggle,
+	Callback = function(New) Aimbot.Settings.Toggle = New end
+}).Default = Aimbot.Settings.Toggle
+
+-- 🔥 NOVO: Smoothness Slider
+Values:AddSlider({
+	Name = "Smoothness",
+	Value = Aimbot.Settings.Smoothness,
+	Callback = function(New) Aimbot.Settings.Smoothness = New end,
+	Min = 0.1,
+	Max = 1.0,
+	Decimals = 2
+}).Default = Aimbot.Settings.Smoothness
+
+Aimbot.Settings.LockPart = Parts[1]; Values:AddDropdown({
+	Name = "Lock Part",
+	Value = Parts[1],
+	Callback = function(New) Aimbot.Settings.LockPart = New end,
+	List = Parts,
+	Nothing = "Head"
+}).Default = Parts[1]
+
+Values:AddTextbox({
+	Name = "Hotkey",
+	Value = Aimbot.Settings.TriggerKey,
+	Callback = function(New) Aimbot.Settings.TriggerKey = New end
+}).Default = Aimbot.Settings.TriggerKey
+
+Values:AddSlider({
+	Name = "Sensitivity",
+	Value = Aimbot.Settings.Sensitivity,
+	Callback = function(New) Aimbot.Settings.Sensitivity = New end,
+	Min = 0, Max = 1, Decimals = 2
+}).Default = Aimbot.Settings.Sensitivity
+
+--// Aimbot Checks
+Checks:AddToggle({
+	Name = "Team Check",
+	Value = Aimbot.Settings.TeamCheck,
+	Callback = function(New) Aimbot.Settings.TeamCheck = New end
+}).Default = Aimbot.Settings.TeamCheck
+
+Checks:AddToggle({
+	Name = "Wall Check",
+	Value = Aimbot.Settings.WallCheck,
+	Callback = function(New) Aimbot.Settings.WallCheck = New end
+}).Default = Aimbot.Settings.WallCheck
+
+Checks:AddToggle({
+	Name = "Alive Check",
+	Value = Aimbot.Settings.AliveCheck,
+	Callback = function(New) Aimbot.Settings.AliveCheck = New end
+}).Default = Aimbot.Settings.AliveCheck
+
+--// Aimbot ThirdPerson
+ThirdPerson:AddToggle({
+	Name = "Enable Third Person",
+	Value = Aimbot.Settings.ThirdPerson,
+	Callback = function(New) Aimbot.Settings.ThirdPerson = New end
+}).Default = Aimbot.Settings.ThirdPerson
+
+ThirdPerson:AddSlider({
+	Name = "Sensitivity",
+	Value = Aimbot.Settings.ThirdPersonSensitivity,
+	Callback = function(New) Aimbot.Settings.ThirdPersonSensitivity = New end,
+	Min = 0.1, Max = 5, Decimals = 1
+}).Default = Aimbot.Settings.ThirdPersonSensitivity
+
+--// FOV Settings Values
+FOV_Values:AddToggle({
+	Name = "Enabled",
+	Value = Aimbot.FOVSettings.Enabled,
+	Callback = function(New) Aimbot.FOVSettings.Enabled = New end
+}).Default = Aimbot.FOVSettings.Enabled
+
+FOV_Values:AddToggle({
+	Name = "Visible",
+	Value = Aimbot.FOVSettings.Visible,
+	Callback = function(New) Aimbot.FOVSettings.Visible = New end
+}).Default = Aimbot.FOVSettings.Visible
+
+FOV_Values:AddSlider({
+	Name = "Amount",
+	Value = Aimbot.FOVSettings.Amount,
+	Callback = function(New) Aimbot.FOVSettings.Amount = New end,
+	Min = 10, Max = 300
+}).Default = Aimbot.FOVSettings.Amount
+
+--// FOV Settings Appearance
+FOV_Appearance:AddToggle({
+	Name = "Filled",
+	Value = Aimbot.FOVSettings.Filled,
+	Callback = function(New) Aimbot.FOVSettings.Filled = New end
+}).Default = Aimbot.FOVSettings.Filled
+
+FOV_Appearance:AddSlider({
+	Name = "Transparency",
+	Value = Aimbot.FOVSettings.Transparency,
+	Callback = function(New) Aimbot.FOVSettings.Transparency = New end,
+	Min = 0, Max = 1, Decimal = 1
+}).Default = Aimbot.FOVSettings.Transparency
+
+FOV_Appearance:AddSlider({
+	Name = "Sides",
+	Value = Aimbot.FOVSettings.Sides,
+	Callback = function(New) Aimbot.FOVSettings.Sides = New end,
+	Min = 3, Max = 60
+}).Default = Aimbot.FOVSettings.Sides
+
+FOV_Appearance:AddSlider({
+	Name = "Thickness",
+	Value = Aimbot.FOVSettings.Thickness,
+	Callback = function(New) Aimbot.FOVSettings.Thickness = New end,
+	Min = 1, Max = 50
+}).Default = Aimbot.FOVSettings.Thickness
+
+FOV_Appearance:AddColorpicker({
+	Name = "Color",
+	Value = Aimbot.FOVSettings.Color,
+	Callback = function(New) Aimbot.FOVSettings.Color = New end
+}).Default = Aimbot.FOVSettings.Color
+
+FOV_Appearance:AddColorpicker({
+	Name = "Locked Color",
+	Value = Aimbot.FOVSettings.LockedColor,
+	Callback = function(New) Aimbot.FOVSettings.LockedColor = New end
+}).Default = Aimbot.FOVSettings.LockedColor
 
 --// Visuals Sections (WALLHACK)
 local WallHackChecks = VisualsTab:CreateSection({ Name = "Checks" })
@@ -607,100 +728,6 @@ HealthBarSettings:AddColorpicker({
 	Callback = function(New) WallHack.Visuals.HealthBarSettings.OutlineColor = New end
 }).Default = WallHack.Visuals.HealthBarSettings.OutlineColor
 
--- ========== CROSSHAIR ==========
-CrosshairSettings:AddToggle({
-	Name = "Mouse Cursor",
-	Value = UserInputService.MouseIconEnabled,
-	Callback = function(New) UserInputService.MouseIconEnabled = New end
-}).Default = UserInputService.MouseIconEnabled
-
-CrosshairSettings:AddToggle({
-	Name = "Enabled",
-	Value = WallHack.Crosshair.Settings.Enabled,
-	Callback = function(New) WallHack.Crosshair.Settings.Enabled = New end
-}).Default = WallHack.Crosshair.Settings.Enabled
-
-CrosshairSettings:AddColorpicker({
-	Name = "Color",
-	Value = WallHack.Crosshair.Settings.Color,
-	Callback = function(New) WallHack.Crosshair.Settings.Color = New end
-}).Default = WallHack.Crosshair.Settings.Color
-
-CrosshairSettings:AddSlider({
-	Name = "Transparency",
-	Value = WallHack.Crosshair.Settings.Transparency,
-	Callback = function(New) WallHack.Crosshair.Settings.Transparency = New end,
-	Min = 0, Max = 1, Decimals = 2
-}).Default = WallHack.Crosshair.Settings.Transparency
-
-CrosshairSettings:AddSlider({
-	Name = "Size",
-	Value = WallHack.Crosshair.Settings.Size,
-	Callback = function(New) WallHack.Crosshair.Settings.Size = New end,
-	Min = 8, Max = 24
-}).Default = WallHack.Crosshair.Settings.Size
-
-CrosshairSettings:AddSlider({
-	Name = "Thickness",
-	Value = WallHack.Crosshair.Settings.Thickness,
-	Callback = function(New) WallHack.Crosshair.Settings.Thickness = New end,
-	Min = 1, Max = 5
-}).Default = WallHack.Crosshair.Settings.Thickness
-
-CrosshairSettings:AddSlider({
-	Name = "Gap Size",
-	Value = WallHack.Crosshair.Settings.GapSize,
-	Callback = function(New) WallHack.Crosshair.Settings.GapSize = New end,
-	Min = 0, Max = 20
-}).Default = WallHack.Crosshair.Settings.GapSize
-
-CrosshairSettings:AddSlider({
-	Name = "Rotation (Degrees)",
-	Value = WallHack.Crosshair.Settings.Rotation,
-	Callback = function(New) WallHack.Crosshair.Settings.Rotation = New end,
-	Min = -180, Max = 180
-}).Default = WallHack.Crosshair.Settings.Rotation
-
-CrosshairSettings:AddDropdown({
-	Name = "Position",
-	Value = WallHack.Crosshair.Settings.Type == 1 and "Mouse" or "Center",
-	Callback = function(New) WallHack.Crosshair.Settings.Type = New == "Mouse" and 1 or 2 end,
-	List = {"Mouse", "Center"},
-	Nothing = "Mouse"
-}).Default = WallHack.Crosshair.Settings.Type == 1 and "Mouse" or "Center"
-
-CrosshairSettings_CenterDot:AddToggle({
-	Name = "Center Dot",
-	Value = WallHack.Crosshair.Settings.CenterDot,
-	Callback = function(New) WallHack.Crosshair.Settings.CenterDot = New end
-}).Default = WallHack.Crosshair.Settings.CenterDot
-
-CrosshairSettings_CenterDot:AddColorpicker({
-	Name = "Center Dot Color",
-	Value = WallHack.Crosshair.Settings.CenterDotColor,
-	Callback = function(New) WallHack.Crosshair.Settings.CenterDotColor = New end
-}).Default = WallHack.Crosshair.Settings.CenterDotColor
-
-CrosshairSettings_CenterDot:AddSlider({
-	Name = "Center Dot Size",
-	Value = WallHack.Crosshair.Settings.CenterDotSize,
-	Callback = function(New) WallHack.Crosshair.Settings.CenterDotSize = New end,
-	Min = 1, Max = 6
-}).Default = WallHack.Crosshair.Settings.CenterDotSize
-
-CrosshairSettings_CenterDot:AddSlider({
-	Name = "Center Dot Transparency",
-	Value = WallHack.Crosshair.Settings.CenterDotTransparency,
-	Callback = function(New) WallHack.Crosshair.Settings.CenterDotTransparency = New end,
-	Min = 0, Max = 1, Decimals = 2
-}).Default = WallHack.Crosshair.Settings.CenterDotTransparency
-
-CrosshairSettings_CenterDot:AddToggle({
-	Name = "Center Dot Filled",
-	Value = WallHack.Crosshair.Settings.CenterDotFilled,
-	Callback = function(New) WallHack.Crosshair.Settings.CenterDotFilled = New end
-}).Default = WallHack.Crosshair.Settings.CenterDotFilled
-
 -- ========== DIVERSOS / FLY ==========
 FlySection:AddToggle({
 	Name = "Ativar Fly",
@@ -745,29 +772,8 @@ FunctionsSection:AddButton({
 
 FunctionsSection:AddButton({
 	Name = "Copy Script Page",
-	Callback = function()
-		setclipboard("https://github.com/Exunys/AirHub")
-	end
+	Callback = function() setclipboard("https://github.com/Exunys/AirHub") end
 })
 
---// AirHub V2 Prompt
-do
-	local Aux = Instance.new("BindableFunction")
-	Aux.OnInvoke = function(Answer)
-		if Answer == "No" then return end
-		Library.Unload()
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub-V2/main/src/Main.lua"))()
-	end
-	game.StarterGui:SetCore("SendNotification", {
-		Title = "🎆 AirHub V2 🎆",
-		Text = "Would you like to use the new AirHub V2 script?",
-		Button1 = "Yes",
-		Button2 = "No",
-		Duration = 1 / 0,
-		Icon = "rbxassetid://6238537240",
-		Callback = Aux
-	})
-end
-
-print("✅ AirHub carregado com AIMBOT, WALLHACK, CROSSHAIR e FLY!")
-print("🦅 Use WASD + Espaço/Shift para voar!")
+print("✅ AirHub carregado com SMOOTHNESS e FLY!")
+print("🎯 Smoothness controla a velocidade da mira (0.1 = rápido, 1.0 = suave)")
