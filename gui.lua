@@ -32,7 +32,7 @@ local function loadModule(url, name)
     end
 end
 
--- ========== CARREGAR SEUS MÓDULOS ==========
+-- ========== CARREGAR MÓDULOS ==========
 print("🔄 Carregando módulos do AirHub...")
 
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
@@ -42,10 +42,19 @@ loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs
 -- Aguardar carregamento
 task.wait(1)
 
--- ========== OBTER REFERÊNCIAS DOS MÓDULOS ==========
+-- ========== ACESSAR MÓDULOS CORRETAMENTE ==========
+-- Em vez de procurar em getgenv().AirHub, vamos verificar diretamente
 local Aimbot = getgenv().AirHub and getgenv().AirHub.Aimbot
-local ESP = getgenv().AirHub and getgenv().AirHub.WallHack
+local ESP = getgenv().AirHub and getgenv().AirHub.WallHack or getgenv().AirHub and getgenv().AirHub.ESP
 local Hitbox = getgenv().LimbExtender
+
+-- DEBUG: Mostrar o que tem no getgenv()
+print("🔍 Conteúdo do getgenv().AirHub:", getgenv().AirHub and "existe" or "não existe")
+if getgenv().AirHub then
+    for k,v in pairs(getgenv().AirHub) do
+        print("  - " .. tostring(k) .. ": " .. tostring(v))
+    end
+end
 
 -- ========== VERIFICAR MÓDULOS CARREGADOS ==========
 print("🔍 Aimbot:", Aimbot and "✅" or "❌")
@@ -54,9 +63,15 @@ print("🔍 Hitbox:", Hitbox and "✅" or "❌")
 
 -- Se nenhum módulo carregou, mostrar erro
 if not Aimbot and not ESP and not Hitbox then
-    warn("❌ NENHUM MÓDULO FOI CARREGADO!")
-    warn("Verifique se as URLs estão corretas e os scripts existem")
-    return
+    warn("❌ NENHUM MÓDULO FOI ENCONTRADO!")
+    warn("Verificando alternativas...")
+    
+    -- Tentar encontrar os módulos em outros locais
+    for k,v in pairs(getgenv()) do
+        if type(v) == "table" and (k == "AirHub" or k == "Aimbot" or k == "ESP" or k == "LimbExtender") then
+            print("✅ Encontrado: " .. tostring(k))
+        end
+    end
 end
 
 -- ========== SISTEMA DE FLY (EMBUTIDO) ==========
@@ -125,16 +140,14 @@ local function ToggleFly(state)
     end
 end
 
--- ========== SISTEMA SIMPLES DE GUI (SEM BIBLIOTECA) ==========
--- Criando uma GUI simples manualmente já que não temos a library
-
+-- ========== CRIAR GUI SIMPLES ==========
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AirHubPremium"
 ScreenGui.Parent = game:GetService("CoreGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 600, 0, 550)
-MainFrame.Position = UDim2.new(0.5, -300, 0.5, -275)
+MainFrame.Size = UDim2.new(0, 500, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 MainFrame.BackgroundTransparency = 0.1
 MainFrame.BorderSizePixel = 0
@@ -153,9 +166,26 @@ Title.TextScaled = true
 Title.Font = Enum.Font.GothamBold
 Title.Parent = MainFrame
 
+-- Botão Fechar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextScaled = true
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = MainFrame
+
+CloseButton.MouseButton1Click:Connect(function()
+    if Fly.Enabled then ToggleFly(false) end
+    ScreenGui:Destroy()
+end)
+
 -- Status dos módulos
 local StatusFrame = Instance.new("Frame")
-StatusFrame.Size = UDim2.new(1, -20, 0, 80)
+StatusFrame.Size = UDim2.new(1, -20, 0, 100)
 StatusFrame.Position = UDim2.new(0, 10, 0, 50)
 StatusFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 StatusFrame.BorderSizePixel = 0
@@ -171,32 +201,28 @@ StatusTitle.TextScaled = true
 StatusTitle.Font = Enum.Font.Gotham
 StatusTitle.Parent = StatusFrame
 
-local AimbotStatus = Instance.new("TextLabel")
-AimbotStatus.Size = UDim2.new(1, 0, 0, 20)
-AimbotStatus.Position = UDim2.new(0, 10, 0, 30)
-AimbotStatus.BackgroundTransparency = 1
-AimbotStatus.Text = "Aimbot: " .. (Aimbot and "✅ ATIVO" or "❌ FALHA")
-AimbotStatus.TextColor3 = Aimbot and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-AimbotStatus.TextXAlignment = Enum.TextXAlignment.Left
-AimbotStatus.TextScaled = true
-AimbotStatus.Font = Enum.Font.Gotham
-AimbotStatus.Parent = StatusFrame
+local function createStatusLabel(name, module, yPos)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.Position = UDim2.new(0, 10, 0, yPos)
+    label.BackgroundTransparency = 1
+    label.Text = name .. ": " .. (module and "✅ ATIVO" or "❌ FALHA")
+    label.TextColor3 = module and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextScaled = true
+    label.Font = Enum.Font.Gotham
+    label.Parent = StatusFrame
+    return label
+end
 
-local ESPStatus = Instance.new("TextLabel")
-ESPStatus.Size = UDim2.new(1, 0, 0, 20)
-ESPStatus.Position = UDim2.new(0, 10, 0, 50)
-ESPStatus.BackgroundTransparency = 1
-ESPStatus.Text = "ESP: " .. (ESP and "✅ ATIVO" or "❌ FALHA")
-ESPStatus.TextColor3 = ESP and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-ESPStatus.TextXAlignment = Enum.TextXAlignment.Left
-ESPStatus.TextScaled = true
-ESPStatus.Font = Enum.Font.Gotham
-ESPStatus.Parent = StatusFrame
+createStatusLabel("Aimbot", Aimbot, 30)
+createStatusLabel("ESP", ESP, 50)
+createStatusLabel("Hitbox", Hitbox, 70)
 
 -- Botão Fly
 local FlyButton = Instance.new("TextButton")
 FlyButton.Size = UDim2.new(0, 150, 0, 40)
-FlyButton.Position = UDim2.new(0, 10, 0, 140)
+FlyButton.Position = UDim2.new(0, 10, 0, 160)
 FlyButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 FlyButton.BorderSizePixel = 0
 FlyButton.Text = "Ativar Fly"
@@ -208,7 +234,7 @@ FlyButton.Parent = MainFrame
 -- Velocidade Fly
 local SpeedLabel = Instance.new("TextLabel")
 SpeedLabel.Size = UDim2.new(0, 100, 0, 30)
-SpeedLabel.Position = UDim2.new(0, 170, 0, 145)
+SpeedLabel.Position = UDim2.new(0, 170, 0, 165)
 SpeedLabel.BackgroundTransparency = 1
 SpeedLabel.Text = "Velocidade: 50"
 SpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -217,9 +243,10 @@ SpeedLabel.TextScaled = true
 SpeedLabel.Font = Enum.Font.Gotham
 SpeedLabel.Parent = MainFrame
 
+-- Slider de velocidade
 local SpeedSlider = Instance.new("Frame")
 SpeedSlider.Size = UDim2.new(0, 200, 0, 20)
-SpeedSlider.Position = UDim2.new(0, 170, 0, 175)
+SpeedSlider.Position = UDim2.new(0, 170, 0, 195)
 SpeedSlider.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 SpeedSlider.BorderSizePixel = 0
 SpeedSlider.Parent = MainFrame
@@ -240,7 +267,7 @@ FlyButton.MouseButton1Click:Connect(function()
     ToggleFly(flyActive)
 end)
 
--- Slider de velocidade (simplificado)
+-- Slider de velocidade
 SpeedSliderButton.MouseButton1Down:Connect(function()
     local connection
     connection = game:GetService("RunService").RenderStepped:Connect(function()
@@ -263,8 +290,8 @@ end)
 
 -- Instruções
 local Instructions = Instance.new("TextLabel")
-Instructions.Size = UDim2.new(1, -20, 0, 100)
-Instructions.Position = UDim2.new(0, 10, 0, 200)
+Instructions.Size = UDim2.new(1, -20, 0, 80)
+Instructions.Position = UDim2.new(0, 10, 0, 230)
 Instructions.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 Instructions.BorderSizePixel = 0
 Instructions.Text = "Controles Fly:\nWASD - Movimento\nEspaço - Subir\nShift - Descer"
@@ -274,22 +301,4 @@ Instructions.TextScaled = true
 Instructions.Font = Enum.Font.Gotham
 Instructions.Parent = MainFrame
 
--- Botão Fechar
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 30, 0, 30)
-CloseButton.Position = UDim2.new(1, -35, 0, 5)
-CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-CloseButton.BorderSizePixel = 0
-CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseButton.TextScaled = true
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Parent = MainFrame
-
-CloseButton.MouseButton1Click:Connect(function()
-    if flyActive then ToggleFly(false) end
-    ScreenGui:Destroy()
-end)
-
 print("✅ AirHub Premium carregado com sucesso!")
-print("🎯 Aimbot | 👁️ ESP | ✈️ Fly | 💪 Hitbox")
