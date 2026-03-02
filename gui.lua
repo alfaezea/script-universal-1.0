@@ -40,38 +40,26 @@ loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua", "Hitbox")
 
 -- Aguardar carregamento
-task.wait(1)
+task.wait(2)
 
--- ========== ACESSAR MÓDULOS CORRETAMENTE ==========
--- Em vez de procurar em getgenv().AirHub, vamos verificar diretamente
+-- ========== OBTER REFERÊNCIAS DOS MÓDULOS ==========
+-- Cada módulo se registra em um lugar diferente!
 local Aimbot = getgenv().AirHub and getgenv().AirHub.Aimbot
-local ESP = getgenv().AirHub and getgenv().AirHub.WallHack or getgenv().AirHub and getgenv().AirHub.ESP
-local Hitbox = getgenv().LimbExtender
+local ESP = getgenv().AirHub and getgenv().AirHub.WallHack  -- ESP está como WallHack!
+local Hitbox = getgenv().LimbExtender  -- Hitbox é direto no getgenv()!
 
--- DEBUG: Mostrar o que tem no getgenv()
-print("🔍 Conteúdo do getgenv().AirHub:", getgenv().AirHub and "existe" or "não existe")
-if getgenv().AirHub then
-    for k,v in pairs(getgenv().AirHub) do
-        print("  - " .. tostring(k) .. ": " .. tostring(v))
-    end
-end
+-- Criar instância da Hitbox se ela existir
+local HitboxInstance = Hitbox and Hitbox({})  -- Inicializa com configurações padrão
 
 -- ========== VERIFICAR MÓDULOS CARREGADOS ==========
+print("\n=== STATUS DOS MÓDULOS ===")
 print("🔍 Aimbot:", Aimbot and "✅" or "❌")
-print("🔍 ESP:", ESP and "✅" or "❌")
+print("🔍 ESP (WallHack):", ESP and "✅" or "❌") 
 print("🔍 Hitbox:", Hitbox and "✅" or "❌")
 
--- Se nenhum módulo carregou, mostrar erro
 if not Aimbot and not ESP and not Hitbox then
     warn("❌ NENHUM MÓDULO FOI ENCONTRADO!")
-    warn("Verificando alternativas...")
-    
-    -- Tentar encontrar os módulos em outros locais
-    for k,v in pairs(getgenv()) do
-        if type(v) == "table" and (k == "AirHub" or k == "Aimbot" or k == "ESP" or k == "LimbExtender") then
-            print("✅ Encontrado: " .. tostring(k))
-        end
-    end
+    return
 end
 
 -- ========== SISTEMA DE FLY (EMBUTIDO) ==========
@@ -146,8 +134,8 @@ ScreenGui.Name = "AirHubPremium"
 ScreenGui.Parent = game:GetService("CoreGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 500, 0, 400)
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 500, 0, 450)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -225)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 MainFrame.BackgroundTransparency = 0.1
 MainFrame.BorderSizePixel = 0
@@ -180,95 +168,385 @@ CloseButton.Parent = MainFrame
 
 CloseButton.MouseButton1Click:Connect(function()
     if Fly.Enabled then ToggleFly(false) end
+    if HitboxInstance and HitboxInstance.Destroy then HitboxInstance:Destroy() end
     ScreenGui:Destroy()
 end)
 
--- Status dos módulos
-local StatusFrame = Instance.new("Frame")
-StatusFrame.Size = UDim2.new(1, -20, 0, 100)
-StatusFrame.Position = UDim2.new(0, 10, 0, 50)
-StatusFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-StatusFrame.BorderSizePixel = 0
-StatusFrame.Parent = MainFrame
+-- Abas
+local TabContainer = Instance.new("Frame")
+TabContainer.Size = UDim2.new(1, 0, 0, 30)
+TabContainer.Position = UDim2.new(0, 0, 0, 40)
+TabContainer.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+TabContainer.BorderSizePixel = 0
+TabContainer.Parent = MainFrame
 
-local StatusTitle = Instance.new("TextLabel")
-StatusTitle.Size = UDim2.new(1, 0, 0, 25)
-StatusTitle.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-StatusTitle.BorderSizePixel = 0
-StatusTitle.Text = "Status dos Módulos"
-StatusTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-StatusTitle.TextScaled = true
-StatusTitle.Font = Enum.Font.Gotham
-StatusTitle.Parent = StatusFrame
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Size = UDim2.new(1, -20, 1, -100)
+ContentFrame.Position = UDim2.new(0, 10, 0, 75)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+ContentFrame.BorderSizePixel = 0
+ContentFrame.Parent = MainFrame
 
-local function createStatusLabel(name, module, yPos)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 20)
-    label.Position = UDim2.new(0, 10, 0, yPos)
-    label.BackgroundTransparency = 1
-    label.Text = name .. ": " .. (module and "✅ ATIVO" or "❌ FALHA")
-    label.TextColor3 = module and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextScaled = true
-    label.Font = Enum.Font.Gotham
-    label.Parent = StatusFrame
-    return label
+-- Função para criar abas
+local function createTab(name, yPos)
+    local tab = Instance.new("TextButton")
+    tab.Size = UDim2.new(0, 80, 0, 25)
+    tab.Position = UDim2.new(0, 5 + (85 * (yPos-1)), 0, 2)
+    tab.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    tab.BorderSizePixel = 0
+    tab.Text = name
+    tab.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tab.TextScaled = true
+    tab.Font = Enum.Font.Gotham
+    tab.Parent = TabContainer
+    return tab
 end
 
-createStatusLabel("Aimbot", Aimbot, 30)
-createStatusLabel("ESP", ESP, 50)
-createStatusLabel("Hitbox", Hitbox, 70)
+-- Criar abas
+local Tab1 = createTab("Aimbot", 1)
+local Tab2 = createTab("ESP", 2)
+local Tab3 = createTab("Hitbox", 3)
+local Tab4 = createTab("Fly", 4)
+
+-- Função para esconder todos os conteúdos
+local function hideAll()
+    for _, child in ipairs(ContentFrame:GetChildren()) do
+        if child:IsA("Frame") then
+            child.Visible = false
+        end
+    end
+end
+
+-- ========== ABA AIMBOT ==========
+local AimbotFrame = Instance.new("Frame")
+AimbotFrame.Size = UDim2.new(1, 0, 1, 0)
+AimbotFrame.BackgroundTransparency = 1
+AimbotFrame.Visible = false
+AimbotFrame.Parent = ContentFrame
+
+if Aimbot then
+    local StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Size = UDim2.new(1, -20, 0, 30)
+    StatusLabel.Position = UDim2.new(0, 10, 0, 10)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Text = "✅ Aimbot Carregado!"
+    StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    StatusLabel.TextScaled = true
+    StatusLabel.Font = Enum.Font.Gotham
+    StatusLabel.Parent = AimbotFrame
+    
+    -- Botão Ativar
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0, 200, 0, 40)
+    ToggleBtn.Position = UDim2.new(0.5, -100, 0, 50)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    ToggleBtn.BorderSizePixel = 0
+    ToggleBtn.Text = "Ativar Aimbot"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextScaled = true
+    ToggleBtn.Font = Enum.Font.Gotham
+    ToggleBtn.Parent = AimbotFrame
+    
+    local aimbotActive = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        aimbotActive = not aimbotActive
+        Aimbot.Settings.Enabled = aimbotActive
+        ToggleBtn.Text = aimbotActive and "Desativar Aimbot" or "Ativar Aimbot"
+        ToggleBtn.BackgroundColor3 = aimbotActive and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(45, 45, 55)
+    end)
+    
+    -- Smoothness slider
+    local SmoothLabel = Instance.new("TextLabel")
+    SmoothLabel.Size = UDim2.new(0, 200, 0, 30)
+    SmoothLabel.Position = UDim2.new(0.5, -250, 0, 100)
+    SmoothLabel.BackgroundTransparency = 1
+    SmoothLabel.Text = "Smoothness: " .. Aimbot.Settings.Smoothness
+    SmoothLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SmoothLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SmoothLabel.TextScaled = true
+    SmoothLabel.Font = Enum.Font.Gotham
+    SmoothLabel.Parent = AimbotFrame
+    
+    local SmoothSlider = Instance.new("Frame")
+    SmoothSlider.Size = UDim2.new(0, 200, 0, 20)
+    SmoothSlider.Position = UDim2.new(0.5, -250, 0, 130)
+    SmoothSlider.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    SmoothSlider.BorderSizePixel = 0
+    SmoothSlider.Parent = AimbotFrame
+    
+    local SmoothSliderBtn = Instance.new("TextButton")
+    SmoothSliderBtn.Size = UDim2.new(Aimbot.Settings.Smoothness * 10, 0, 1, 0)
+    SmoothSliderBtn.BackgroundColor3 = Color3.fromRGB(255, 117, 24)
+    SmoothSliderBtn.BorderSizePixel = 0
+    SmoothSliderBtn.Text = ""
+    SmoothSliderBtn.Parent = SmoothSlider
+    
+    SmoothSliderBtn.MouseButton1Down:Connect(function()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+            local sliderPos = SmoothSlider.AbsolutePosition.X
+            local sliderSize = SmoothSlider.AbsoluteSize.X
+            local relativePos = math.clamp(mousePos.X - sliderPos, 0, sliderSize)
+            local percent = relativePos / sliderSize
+            SmoothSliderBtn.Size = UDim2.new(percent, 0, 1, 0)
+            local value = percent * 1  -- 0 a 1
+            Aimbot.Settings.Smoothness = value
+            SmoothLabel.Text = "Smoothness: " .. string.format("%.2f", value)
+        end)
+        
+        game:GetService("UserInputService").InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                connection:Disconnect()
+            end
+        end)
+    end)
+else
+    local ErrorLabel = Instance.new("TextLabel")
+    ErrorLabel.Size = UDim2.new(1, -20, 0, 50)
+    ErrorLabel.Position = UDim2.new(0, 10, 0, 10)
+    ErrorLabel.BackgroundTransparency = 1
+    ErrorLabel.Text = "❌ Aimbot não carregado!"
+    ErrorLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    ErrorLabel.TextScaled = true
+    ErrorLabel.Font = Enum.Font.Gotham
+    ErrorLabel.Parent = AimbotFrame
+end
+
+-- ========== ABA ESP ==========
+local ESPFrame = Instance.new("Frame")
+ESPFrame.Size = UDim2.new(1, 0, 1, 0)
+ESPFrame.BackgroundTransparency = 1
+ESPFrame.Visible = false
+ESPFrame.Parent = ContentFrame
+
+if ESP then
+    local StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Size = UDim2.new(1, -20, 0, 30)
+    StatusLabel.Position = UDim2.new(0, 10, 0, 10)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Text = "✅ ESP (WallHack) Carregado!"
+    StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    StatusLabel.TextScaled = true
+    StatusLabel.Font = Enum.Font.Gotham
+    StatusLabel.Parent = ESPFrame
+    
+    -- Botão Ativar
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0, 200, 0, 40)
+    ToggleBtn.Position = UDim2.new(0.5, -100, 0, 50)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    ToggleBtn.BorderSizePixel = 0
+    ToggleBtn.Text = "Ativar ESP"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextScaled = true
+    ToggleBtn.Font = Enum.Font.Gotham
+    ToggleBtn.Parent = ESPFrame
+    
+    local espActive = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        espActive = not espActive
+        ESP.Settings.Enabled = espActive
+        ToggleBtn.Text = espActive and "Desativar ESP" or "Ativar ESP"
+        ToggleBtn.BackgroundColor3 = espActive and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(45, 45, 55)
+    end)
+    
+    -- Checkboxes simples
+    local function createCheckbox(parent, text, yPos, setting, key)
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(0, 200, 0, 30)
+        btn.Position = UDim2.new(0, 10, 0, yPos)
+        btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        btn.BorderSizePixel = 0
+        btn.Text = "🔲 " .. text
+        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.TextScaled = true
+        btn.Font = Enum.Font.Gotham
+        btn.Parent = parent
+        
+        local active = setting[key]
+        btn.MouseButton1Click:Connect(function()
+            active = not active
+            setting[key] = active
+            btn.Text = (active and "✅ " or "🔲 ") .. text
+        end)
+    end
+    
+    createCheckbox(ESPFrame, "Team Check", 100, ESP.Settings, "TeamCheck")
+    createCheckbox(ESPFrame, "Alive Check", 140, ESP.Settings, "AliveCheck")
+    createCheckbox(ESPFrame, "Box ESP", 180, ESP.Visuals.BoxSettings, "Enabled")
+    createCheckbox(ESPFrame, "Tracers", 220, ESP.Visuals.TracersSettings, "Enabled")
+    createCheckbox(ESPFrame, "Head Dot", 260, ESP.Visuals.HeadDotSettings, "Enabled")
+else
+    local ErrorLabel = Instance.new("TextLabel")
+    ErrorLabel.Size = UDim2.new(1, -20, 0, 50)
+    ErrorLabel.Position = UDim2.new(0, 10, 0, 10)
+    ErrorLabel.BackgroundTransparency = 1
+    ErrorLabel.Text = "❌ ESP não carregado!"
+    ErrorLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    ErrorLabel.TextScaled = true
+    ErrorLabel.Font = Enum.Font.Gotham
+    ErrorLabel.Parent = ESPFrame
+end
+
+-- ========== ABA HITBOX ==========
+local HitboxFrame = Instance.new("Frame")
+HitboxFrame.Size = UDim2.new(1, 0, 1, 0)
+HitboxFrame.BackgroundTransparency = 1
+HitboxFrame.Visible = false
+HitboxFrame.Parent = ContentFrame
+
+if HitboxInstance then
+    local StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Size = UDim2.new(1, -20, 0, 30)
+    StatusLabel.Position = UDim2.new(0, 10, 0, 10)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Text = "✅ Hitbox Carregado!"
+    StatusLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+    StatusLabel.TextScaled = true
+    StatusLabel.Font = Enum.Font.Gotham
+    StatusLabel.Parent = HitboxFrame
+    
+    -- Botão Ativar
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0, 200, 0, 40)
+    ToggleBtn.Position = UDim2.new(0.5, -100, 0, 50)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    ToggleBtn.BorderSizePixel = 0
+    ToggleBtn.Text = "Ativar Hitbox"
+    ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleBtn.TextScaled = true
+    ToggleBtn.Font = Enum.Font.Gotham
+    ToggleBtn.Parent = HitboxFrame
+    
+    local hitboxActive = false
+    ToggleBtn.MouseButton1Click:Connect(function()
+        hitboxActive = not hitboxActive
+        if hitboxActive then
+            HitboxInstance:Start()
+        else
+            HitboxInstance:Stop()
+        end
+        ToggleBtn.Text = hitboxActive and "Desativar Hitbox" or "Ativar Hitbox"
+        ToggleBtn.BackgroundColor3 = hitboxActive and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(45, 45, 55)
+    end)
+    
+    -- Slider de tamanho
+    local SizeLabel = Instance.new("TextLabel")
+    SizeLabel.Size = UDim2.new(0, 200, 0, 30)
+    SizeLabel.Position = UDim2.new(0.5, -250, 0, 100)
+    SizeLabel.BackgroundTransparency = 1
+    SizeLabel.Text = "Tamanho: " .. HitboxInstance:Get("LIMB_SIZE") or 15
+    SizeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SizeLabel.TextScaled = true
+    SizeLabel.Font = Enum.Font.Gotham
+    SizeLabel.Parent = HitboxFrame
+    
+    local SizeSlider = Instance.new("Frame")
+    SizeSlider.Size = UDim2.new(0, 200, 0, 20)
+    SizeSlider.Position = UDim2.new(0.5, -250, 0, 130)
+    SizeSlider.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    SizeSlider.BorderSizePixel = 0
+    SizeSlider.Parent = HitboxFrame
+    
+    local SizeSliderBtn = Instance.new("TextButton")
+    SizeSliderBtn.Size = UDim2.new(0.5, 0, 1, 0)
+    SizeSliderBtn.BackgroundColor3 = Color3.fromRGB(255, 117, 24)
+    SizeSliderBtn.BorderSizePixel = 0
+    SizeSliderBtn.Text = ""
+    SizeSliderBtn.Parent = SizeSlider
+    
+    SizeSliderBtn.MouseButton1Down:Connect(function()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+            local sliderPos = SizeSlider.AbsolutePosition.X
+            local sliderSize = SizeSlider.AbsoluteSize.X
+            local relativePos = math.clamp(mousePos.X - sliderPos, 0, sliderSize)
+            local percent = relativePos / sliderSize
+            SizeSliderBtn.Size = UDim2.new(percent, 0, 1, 0)
+            local value = math.floor(5 + (percent * 25))
+            HitboxInstance:Set("LIMB_SIZE", value)
+            SizeLabel.Text = "Tamanho: " .. value
+        end)
+        
+        game:GetService("UserInputService").InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                connection:Disconnect()
+            end
+        end)
+    end)
+else
+    local ErrorLabel = Instance.new("TextLabel")
+    ErrorLabel.Size = UDim2.new(1, -20, 0, 50)
+    ErrorLabel.Position = UDim2.new(0, 10, 0, 10)
+    ErrorLabel.BackgroundTransparency = 1
+    ErrorLabel.Text = "❌ Hitbox não carregado!"
+    ErrorLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    ErrorLabel.TextScaled = true
+    ErrorLabel.Font = Enum.Font.Gotham
+    ErrorLabel.Parent = HitboxFrame
+end
+
+-- ========== ABA FLY ==========
+local FlyFrame = Instance.new("Frame")
+FlyFrame.Size = UDim2.new(1, 0, 1, 0)
+FlyFrame.BackgroundTransparency = 1
+FlyFrame.Visible = false
+FlyFrame.Parent = ContentFrame
 
 -- Botão Fly
-local FlyButton = Instance.new("TextButton")
-FlyButton.Size = UDim2.new(0, 150, 0, 40)
-FlyButton.Position = UDim2.new(0, 10, 0, 160)
-FlyButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-FlyButton.BorderSizePixel = 0
-FlyButton.Text = "Ativar Fly"
-FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-FlyButton.TextScaled = true
-FlyButton.Font = Enum.Font.Gotham
-FlyButton.Parent = MainFrame
+local FlyBtn = Instance.new("TextButton")
+FlyBtn.Size = UDim2.new(0, 200, 0, 40)
+FlyBtn.Position = UDim2.new(0.5, -100, 0, 20)
+FlyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+FlyBtn.BorderSizePixel = 0
+FlyBtn.Text = "Ativar Fly"
+FlyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyBtn.TextScaled = true
+FlyBtn.Font = Enum.Font.Gotham
+FlyBtn.Parent = FlyFrame
+
+local flyActive = false
+FlyBtn.MouseButton1Click:Connect(function()
+    flyActive = not flyActive
+    FlyBtn.Text = flyActive and "Desativar Fly" or "Ativar Fly"
+    FlyBtn.BackgroundColor3 = flyActive and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(45, 45, 55)
+    ToggleFly(flyActive)
+end)
 
 -- Velocidade Fly
 local SpeedLabel = Instance.new("TextLabel")
-SpeedLabel.Size = UDim2.new(0, 100, 0, 30)
-SpeedLabel.Position = UDim2.new(0, 170, 0, 165)
+SpeedLabel.Size = UDim2.new(0, 200, 0, 30)
+SpeedLabel.Position = UDim2.new(0.5, -250, 0, 70)
 SpeedLabel.BackgroundTransparency = 1
 SpeedLabel.Text = "Velocidade: 50"
 SpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
 SpeedLabel.TextScaled = true
 SpeedLabel.Font = Enum.Font.Gotham
-SpeedLabel.Parent = MainFrame
+SpeedLabel.Parent = FlyFrame
 
--- Slider de velocidade
 local SpeedSlider = Instance.new("Frame")
 SpeedSlider.Size = UDim2.new(0, 200, 0, 20)
-SpeedSlider.Position = UDim2.new(0, 170, 0, 195)
+SpeedSlider.Position = UDim2.new(0.5, -250, 0, 100)
 SpeedSlider.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 SpeedSlider.BorderSizePixel = 0
-SpeedSlider.Parent = MainFrame
+SpeedSlider.Parent = FlyFrame
 
-local SpeedSliderButton = Instance.new("TextButton")
-SpeedSliderButton.Size = UDim2.new(0.5, 0, 1, 0)
-SpeedSliderButton.BackgroundColor3 = Color3.fromRGB(255, 117, 24)
-SpeedSliderButton.BorderSizePixel = 0
-SpeedSliderButton.Text = ""
-SpeedSliderButton.Parent = SpeedSlider
+local SpeedSliderBtn = Instance.new("TextButton")
+SpeedSliderBtn.Size = UDim2.new(0.25, 0, 1, 0)
+SpeedSliderBtn.BackgroundColor3 = Color3.fromRGB(255, 117, 24)
+SpeedSliderBtn.BorderSizePixel = 0
+SpeedSliderBtn.Text = ""
+SpeedSliderBtn.Parent = SpeedSlider
 
--- Função do Fly
-local flyActive = false
-FlyButton.MouseButton1Click:Connect(function()
-    flyActive = not flyActive
-    FlyButton.Text = flyActive and "Desativar Fly" or "Ativar Fly"
-    FlyButton.BackgroundColor3 = flyActive and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(45, 45, 55)
-    ToggleFly(flyActive)
-end)
-
--- Slider de velocidade
-SpeedSliderButton.MouseButton1Down:Connect(function()
+SpeedSliderBtn.MouseButton1Down:Connect(function()
     local connection
     connection = game:GetService("RunService").RenderStepped:Connect(function()
         local mousePos = game:GetService("UserInputService"):GetMouseLocation()
@@ -276,7 +554,7 @@ SpeedSliderButton.MouseButton1Down:Connect(function()
         local sliderSize = SpeedSlider.AbsoluteSize.X
         local relativePos = math.clamp(mousePos.X - sliderPos, 0, sliderSize)
         local percent = relativePos / sliderSize
-        SpeedSliderButton.Size = UDim2.new(percent, 0, 1, 0)
+        SpeedSliderBtn.Size = UDim2.new(percent, 0, 1, 0)
         Fly.Speed = math.floor(10 + (percent * 190))
         SpeedLabel.Text = "Velocidade: " .. Fly.Speed
     end)
@@ -288,17 +566,40 @@ SpeedSliderButton.MouseButton1Down:Connect(function()
     end)
 end)
 
--- Instruções
 local Instructions = Instance.new("TextLabel")
-Instructions.Size = UDim2.new(1, -20, 0, 80)
-Instructions.Position = UDim2.new(0, 10, 0, 230)
-Instructions.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-Instructions.BorderSizePixel = 0
-Instructions.Text = "Controles Fly:\nWASD - Movimento\nEspaço - Subir\nShift - Descer"
+Instructions.Size = UDim2.new(1, -20, 0, 100)
+Instructions.Position = UDim2.new(0, 10, 0, 150)
+Instructions.BackgroundTransparency = 1
+Instructions.Text = "Controles:\nWASD - Movimento\nEspaço - Subir\nShift - Descer"
 Instructions.TextColor3 = Color3.fromRGB(200, 200, 200)
 Instructions.TextWrapped = true
 Instructions.TextScaled = true
 Instructions.Font = Enum.Font.Gotham
-Instructions.Parent = MainFrame
+Instructions.Parent = FlyFrame
 
-print("✅ AirHub Premium carregado com sucesso!")
+-- Configurar abas
+Tab1.MouseButton1Click:Connect(function()
+    hideAll()
+    AimbotFrame.Visible = true
+end)
+
+Tab2.MouseButton1Click:Connect(function()
+    hideAll()
+    ESPFrame.Visible = true
+end)
+
+Tab3.MouseButton1Click:Connect(function()
+    hideAll()
+    HitboxFrame.Visible = true
+end)
+
+Tab4.MouseButton1Click:Connect(function()
+    hideAll()
+    FlyFrame.Visible = true
+end)
+
+-- Mostrar primeira aba
+AimbotFrame.Visible = true
+
+print("\n✅ AirHub Premium carregado com sucesso!")
+print("📌 Use as abas para configurar cada módulo")
