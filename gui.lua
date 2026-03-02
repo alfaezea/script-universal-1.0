@@ -2,7 +2,7 @@
 	AirHub by Exunys © CC0 1.0 Universal (2023)
 	https://github.com/Exunys
 	Modificado com Smoothness, Fly e HITBOX EXTENDER
-	LINKS CORRIGIDOS!
+	VERSÃO COMPLETA - Visuals, Crosshair e Hitbox RESTAURADOS!
 ]]
 
 --// Cache
@@ -14,9 +14,9 @@ if AirHub or AirHubV2Loaded then return end
 --// Environment
 getgenv().AirHub = {}
 
---// Load Modules (LINKS CORRIGIDOS)
+--// Load Modules (LINKS CORRIGIDOS - TODOS FUNCIONANDO!)
 loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Wall%20Hack.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua"))() -- Link CORRETO do ESP
 loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua"))()
 
 --// Variables
@@ -160,7 +160,7 @@ local ThirdPerson = AimbotTab:CreateSection({ Name = "Third Person" })
 local FOV_Values = AimbotTab:CreateSection({ Name = "Field Of View", Side = "Right" })
 local FOV_Appearance = AimbotTab:CreateSection({ Name = "FOV Circle Appearance", Side = "Right" })
 
---// Visuals Sections
+--// Visuals Sections (WALLHACK - COMPLETO)
 local WallHackChecks = VisualsTab:CreateSection({ Name = "Checks" })
 local ESPSettings = VisualsTab:CreateSection({ Name = "ESP Settings" })
 local BoxesSettings = VisualsTab:CreateSection({ Name = "Boxes Settings" })
@@ -169,11 +169,11 @@ local TracersSettings = VisualsTab:CreateSection({ Name = "Tracers Settings", Si
 local HeadDotsSettings = VisualsTab:CreateSection({ Name = "Head Dots Settings", Side = "Right" })
 local HealthBarSettings = VisualsTab:CreateSection({ Name = "Health Bar Settings", Side = "Right" })
 
---// Crosshair Sections
+--// Crosshair Sections (COMPLETO)
 local CrosshairSettings = CrosshairTab:CreateSection({ Name = "Settings" })
 local CrosshairSettings_CenterDot = CrosshairTab:CreateSection({ Name = "Center Dot Settings", Side = "Right" })
 
---// Diversos Sections
+--// Diversos Sections (FLY + HITBOX)
 local FlySection = MiscTab:CreateSection({ Name = "Sistema de Voo" })
 local HitboxSection = MiscTab:CreateSection({ Name = "Hitbox Extender", Side = "Right" })
 local HitboxConfig = MiscTab:CreateSection({ Name = "Configurações da Hitbox", Side = "Right" })
@@ -202,7 +202,7 @@ Values:AddSlider({
 	Min = 0.1, Max = 1.0, Decimals = 2
 })
 
-Aimbot.Settings.LockPart = Parts[1]; 
+if Aimbot then Aimbot.Settings.LockPart = Parts[1]; end
 Values:AddDropdown({
 	Name = "Lock Part",
 	Value = Parts[1],
@@ -311,6 +311,396 @@ FOV_Appearance:AddColorpicker({
 	Name = "Locked Color",
 	Value = (Aimbot and Aimbot.FOVSettings.LockedColor) or Color3.fromRGB(255,70,70),
 	Callback = function(New) if Aimbot then Aimbot.FOVSettings.LockedColor = New end end
+})
+
+-- ========== WALLHACK (ESP) COMPLETO ==========
+WallHackChecks:AddToggle({
+	Name = "Enabled",
+	Value = WallHack and WallHack.Settings.Enabled or false,
+	Callback = function(New) if WallHack then WallHack.Settings.Enabled = New end end
+})
+
+WallHackChecks:AddToggle({
+	Name = "Team Check",
+	Value = WallHack and WallHack.Settings.TeamCheck or false,
+	Callback = function(New) if WallHack then WallHack.Settings.TeamCheck = New end end
+})
+
+WallHackChecks:AddToggle({
+	Name = "Alive Check",
+	Value = WallHack and WallHack.Settings.AliveCheck or true,
+	Callback = function(New) if WallHack then WallHack.Settings.AliveCheck = New end end
+})
+
+ESPSettings:AddToggle({
+	Name = "Enabled",
+	Value = WallHack and WallHack.Visuals.ESPSettings.Enabled or true,
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.Enabled = New end end
+})
+
+ESPSettings:AddToggle({
+	Name = "Outline",
+	Value = WallHack and WallHack.Visuals.ESPSettings.Outline or true,
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.Outline = New end end
+})
+
+ESPSettings:AddToggle({
+	Name = "Display Distance",
+	Value = WallHack and WallHack.Visuals.ESPSettings.DisplayDistance or true,
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.DisplayDistance = New end end
+})
+
+ESPSettings:AddToggle({
+	Name = "Display Health",
+	Value = WallHack and WallHack.Visuals.ESPSettings.DisplayHealth or true,
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.DisplayHealth = New end end
+})
+
+ESPSettings:AddToggle({
+	Name = "Display Name",
+	Value = WallHack and WallHack.Visuals.ESPSettings.DisplayName or true,
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.DisplayName = New end end
+})
+
+ESPSettings:AddSlider({
+	Name = "Offset",
+	Value = (WallHack and WallHack.Visuals.ESPSettings.Offset) or 20,
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.Offset = New end end,
+	Min = -30, Max = 30
+})
+
+ESPSettings:AddColorpicker({
+	Name = "Text Color",
+	Value = (WallHack and WallHack.Visuals.ESPSettings.TextColor) or Color3.fromRGB(255,255,255),
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.TextColor = New end end
+})
+
+ESPSettings:AddColorpicker({
+	Name = "Outline Color",
+	Value = (WallHack and WallHack.Visuals.ESPSettings.OutlineColor) or Color3.fromRGB(0,0,0),
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.OutlineColor = New end end
+})
+
+ESPSettings:AddSlider({
+	Name = "Text Transparency",
+	Value = (WallHack and WallHack.Visuals.ESPSettings.TextTransparency) or 0.7,
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.TextTransparency = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+ESPSettings:AddSlider({
+	Name = "Text Size",
+	Value = (WallHack and WallHack.Visuals.ESPSettings.TextSize) or 14,
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.TextSize = New end end,
+	Min = 8, Max = 24
+})
+
+ESPSettings:AddDropdown({
+	Name = "Text Font",
+	Value = Fonts[(WallHack and WallHack.Visuals.ESPSettings.TextFont or 0) + 1],
+	Callback = function(New) if WallHack then WallHack.Visuals.ESPSettings.TextFont = Drawing.Fonts[New] end end,
+	List = Fonts,
+	Nothing = "UI"
+})
+
+BoxesSettings:AddToggle({
+	Name = "Enabled",
+	Value = WallHack and WallHack.Visuals.BoxSettings.Enabled or true,
+	Callback = function(New) if WallHack then WallHack.Visuals.BoxSettings.Enabled = New end end
+})
+
+BoxesSettings:AddSlider({
+	Name = "Transparency",
+	Value = (WallHack and WallHack.Visuals.BoxSettings.Transparency) or 0.7,
+	Callback = function(New) if WallHack then WallHack.Visuals.BoxSettings.Transparency = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+BoxesSettings:AddSlider({
+	Name = "Thickness",
+	Value = (WallHack and WallHack.Visuals.BoxSettings.Thickness) or 1,
+	Callback = function(New) if WallHack then WallHack.Visuals.BoxSettings.Thickness = New end end,
+	Min = 1, Max = 5
+})
+
+BoxesSettings:AddSlider({
+	Name = "Scale Increase (For 3D)",
+	Value = (WallHack and WallHack.Visuals.BoxSettings.Increase) or 1,
+	Callback = function(New) if WallHack then WallHack.Visuals.BoxSettings.Increase = New end end,
+	Min = 1, Max = 5
+})
+
+BoxesSettings:AddColorpicker({
+	Name = "Color",
+	Value = (WallHack and WallHack.Visuals.BoxSettings.Color) or Color3.fromRGB(255,255,255),
+	Callback = function(New) if WallHack then WallHack.Visuals.BoxSettings.Color = New end end
+})
+
+BoxesSettings:AddDropdown({
+	Name = "Type",
+	Value = (WallHack and WallHack.Visuals.BoxSettings.Type) == 1 and "3D" or "2D",
+	Callback = function(New) if WallHack then WallHack.Visuals.BoxSettings.Type = New == "3D" and 1 or 2 end,
+	List = {"3D", "2D"},
+	Nothing = "3D"
+})
+
+BoxesSettings:AddToggle({
+	Name = "Filled (2D Square)",
+	Value = WallHack and WallHack.Visuals.BoxSettings.Filled or false,
+	Callback = function(New) if WallHack then WallHack.Visuals.BoxSettings.Filled = New end end
+})
+
+ChamsSettings:AddToggle({
+	Name = "Enabled",
+	Value = WallHack and WallHack.Visuals.ChamsSettings.Enabled or false,
+	Callback = function(New) if WallHack then WallHack.Visuals.ChamsSettings.Enabled = New end end
+})
+
+ChamsSettings:AddToggle({
+	Name = "Filled",
+	Value = WallHack and WallHack.Visuals.ChamsSettings.Filled or true,
+	Callback = function(New) if WallHack then WallHack.Visuals.ChamsSettings.Filled = New end end
+})
+
+ChamsSettings:AddToggle({
+	Name = "Entire Body (For R15 Rigs)",
+	Value = WallHack and WallHack.Visuals.ChamsSettings.EntireBody or false,
+	Callback = function(New) if WallHack then WallHack.Visuals.ChamsSettings.EntireBody = New end end
+})
+
+ChamsSettings:AddSlider({
+	Name = "Transparency",
+	Value = (WallHack and WallHack.Visuals.ChamsSettings.Transparency) or 0.3,
+	Callback = function(New) if WallHack then WallHack.Visuals.ChamsSettings.Transparency = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+ChamsSettings:AddSlider({
+	Name = "Thickness",
+	Value = (WallHack and WallHack.Visuals.ChamsSettings.Thickness) or 1,
+	Callback = function(New) if WallHack then WallHack.Visuals.ChamsSettings.Thickness = New end end,
+	Min = 0, Max = 3
+})
+
+ChamsSettings:AddColorpicker({
+	Name = "Color",
+	Value = (WallHack and WallHack.Visuals.ChamsSettings.Color) or Color3.fromRGB(255,255,255),
+	Callback = function(New) if WallHack then WallHack.Visuals.ChamsSettings.Color = New end end
+})
+
+TracersSettings:AddToggle({
+	Name = "Enabled",
+	Value = WallHack and WallHack.Visuals.TracersSettings.Enabled or false,
+	Callback = function(New) if WallHack then WallHack.Visuals.TracersSettings.Enabled = New end end
+})
+
+TracersSettings:AddSlider({
+	Name = "Transparency",
+	Value = (WallHack and WallHack.Visuals.TracersSettings.Transparency) or 0.7,
+	Callback = function(New) if WallHack then WallHack.Visuals.TracersSettings.Transparency = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+TracersSettings:AddSlider({
+	Name = "Thickness",
+	Value = (WallHack and WallHack.Visuals.TracersSettings.Thickness) or 1,
+	Callback = function(New) if WallHack then WallHack.Visuals.TracersSettings.Thickness = New end end,
+	Min = 1, Max = 5
+})
+
+TracersSettings:AddColorpicker({
+	Name = "Color",
+	Value = (WallHack and WallHack.Visuals.TracersSettings.Color) or Color3.fromRGB(255,255,255),
+	Callback = function(New) if WallHack then WallHack.Visuals.TracersSettings.Color = New end end
+})
+
+TracersSettings:AddDropdown({
+	Name = "Start From",
+	Value = TracersType[(WallHack and WallHack.Visuals.TracersSettings.Type or 1)],
+	Callback = function(New) if WallHack then WallHack.Visuals.TracersSettings.Type = tablefind(TracersType, New) end end,
+	List = TracersType,
+	Nothing = "Bottom"
+})
+
+HeadDotsSettings:AddToggle({
+	Name = "Enabled",
+	Value = WallHack and WallHack.Visuals.HeadDotSettings.Enabled or false,
+	Callback = function(New) if WallHack then WallHack.Visuals.HeadDotSettings.Enabled = New end end
+})
+
+HeadDotsSettings:AddToggle({
+	Name = "Filled",
+	Value = WallHack and WallHack.Visuals.HeadDotSettings.Filled or false,
+	Callback = function(New) if WallHack then WallHack.Visuals.HeadDotSettings.Filled = New end end
+})
+
+HeadDotsSettings:AddSlider({
+	Name = "Transparency",
+	Value = (WallHack and WallHack.Visuals.HeadDotSettings.Transparency) or 0.5,
+	Callback = function(New) if WallHack then WallHack.Visuals.HeadDotSettings.Transparency = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+HeadDotsSettings:AddSlider({
+	Name = "Thickness",
+	Value = (WallHack and WallHack.Visuals.HeadDotSettings.Thickness) or 1,
+	Callback = function(New) if WallHack then WallHack.Visuals.HeadDotSettings.Thickness = New end end,
+	Min = 1, Max = 5
+})
+
+HeadDotsSettings:AddSlider({
+	Name = "Sides",
+	Value = (WallHack and WallHack.Visuals.HeadDotSettings.Sides) or 30,
+	Callback = function(New) if WallHack then WallHack.Visuals.HeadDotSettings.Sides = New end end,
+	Min = 3, Max = 60
+})
+
+HeadDotsSettings:AddColorpicker({
+	Name = "Color",
+	Value = (WallHack and WallHack.Visuals.HeadDotSettings.Color) or Color3.fromRGB(255,255,255),
+	Callback = function(New) if WallHack then WallHack.Visuals.HeadDotSettings.Color = New end end
+})
+
+HealthBarSettings:AddToggle({
+	Name = "Enabled",
+	Value = WallHack and WallHack.Visuals.HealthBarSettings.Enabled or false,
+	Callback = function(New) if WallHack then WallHack.Visuals.HealthBarSettings.Enabled = New end end
+})
+
+HealthBarSettings:AddDropdown({
+	Name = "Position",
+	Value = (WallHack and WallHack.Visuals.HealthBarSettings.Type) == 1 and "Top" or (WallHack and WallHack.Visuals.HealthBarSettings.Type) == 2 and "Bottom" or (WallHack and WallHack.Visuals.HealthBarSettings.Type) == 3 and "Left" or "Right",
+	Callback = function(New) if WallHack then WallHack.Visuals.HealthBarSettings.Type = New == "Top" and 1 or New == "Bottom" and 2 or New == "Left" and 3 or 4 end end,
+	List = {"Top", "Bottom", "Left", "Right"},
+	Nothing = "Left"
+})
+
+HealthBarSettings:AddSlider({
+	Name = "Transparency",
+	Value = (WallHack and WallHack.Visuals.HealthBarSettings.Transparency) or 0.8,
+	Callback = function(New) if WallHack then WallHack.Visuals.HealthBarSettings.Transparency = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+HealthBarSettings:AddSlider({
+	Name = "Size",
+	Value = (WallHack and WallHack.Visuals.HealthBarSettings.Size) or 2,
+	Callback = function(New) if WallHack then WallHack.Visuals.HealthBarSettings.Size = New end end,
+	Min = 2, Max = 10
+})
+
+HealthBarSettings:AddSlider({
+	Name = "Blue",
+	Value = (WallHack and WallHack.Visuals.HealthBarSettings.Blue) or 50,
+	Callback = function(New) if WallHack then WallHack.Visuals.HealthBarSettings.Blue = New end end,
+	Min = 0, Max = 255
+})
+
+HealthBarSettings:AddSlider({
+	Name = "Offset",
+	Value = (WallHack and WallHack.Visuals.HealthBarSettings.Offset) or 10,
+	Callback = function(New) if WallHack then WallHack.Visuals.HealthBarSettings.Offset = New end end,
+	Min = -30, Max = 30
+})
+
+HealthBarSettings:AddColorpicker({
+	Name = "Outline Color",
+	Value = (WallHack and WallHack.Visuals.HealthBarSettings.OutlineColor) or Color3.fromRGB(0,0,0),
+	Callback = function(New) if WallHack then WallHack.Visuals.HealthBarSettings.OutlineColor = New end end
+})
+
+-- ========== CROSSHAIR ==========
+CrosshairSettings:AddToggle({
+	Name = "Mouse Cursor",
+	Value = UserInputService.MouseIconEnabled,
+	Callback = function(New) UserInputService.MouseIconEnabled = New end
+})
+
+CrosshairSettings:AddToggle({
+	Name = "Enabled",
+	Value = WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.Enabled or false,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.Enabled = New end end
+})
+
+CrosshairSettings:AddColorpicker({
+	Name = "Color",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.Color) or Color3.fromRGB(0,255,0),
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.Color = New end end
+})
+
+CrosshairSettings:AddSlider({
+	Name = "Transparency",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.Transparency) or 1,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.Transparency = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+CrosshairSettings:AddSlider({
+	Name = "Size",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.Size) or 12,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.Size = New end end,
+	Min = 8, Max = 24
+})
+
+CrosshairSettings:AddSlider({
+	Name = "Thickness",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.Thickness) or 1,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.Thickness = New end end,
+	Min = 1, Max = 5
+})
+
+CrosshairSettings:AddSlider({
+	Name = "Gap Size",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.GapSize) or 5,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.GapSize = New end end,
+	Min = 0, Max = 20
+})
+
+CrosshairSettings:AddSlider({
+	Name = "Rotation (Degrees)",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.Rotation) or 0,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.Rotation = New end end,
+	Min = -180, Max = 180
+})
+
+CrosshairSettings:AddDropdown({
+	Name = "Position",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.Type) == 1 and "Mouse" or "Center",
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.Type = New == "Mouse" and 1 or 2 end end,
+	List = {"Mouse", "Center"},
+	Nothing = "Mouse"
+})
+
+CrosshairSettings_CenterDot:AddToggle({
+	Name = "Center Dot",
+	Value = WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.CenterDot or false,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.CenterDot = New end end
+})
+
+CrosshairSettings_CenterDot:AddColorpicker({
+	Name = "Center Dot Color",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.CenterDotColor) or Color3.fromRGB(0,255,0),
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.CenterDotColor = New end end
+})
+
+CrosshairSettings_CenterDot:AddSlider({
+	Name = "Center Dot Size",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.CenterDotSize) or 1,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.CenterDotSize = New end end,
+	Min = 1, Max = 6
+})
+
+CrosshairSettings_CenterDot:AddSlider({
+	Name = "Center Dot Transparency",
+	Value = (WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.CenterDotTransparency) or 1,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.CenterDotTransparency = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+CrosshairSettings_CenterDot:AddToggle({
+	Name = "Center Dot Filled",
+	Value = WallHack and WallHack.Crosshair and WallHack.Crosshair.Settings.CenterDotFilled or true,
+	Callback = function(New) if WallHack and WallHack.Crosshair then WallHack.Crosshair.Settings.CenterDotFilled = New end end
 })
 
 -- ========== FLY ==========
@@ -501,6 +891,6 @@ FunctionsSection:AddButton({
 	Callback = function() setclipboard("https://github.com/Exunys/AirHub") end
 })
 
-print("✅ AirHub carregado com SMOOTHNESS, FLY e HITBOX!")
-print("🎯 Smoothness controla a velocidade da mira (0.1 = rápido, 1.0 = suave)")
-print("💪 Hitbox Extender adicionado na aba Diversos!")
+print("✅ AirHub COMPLETO carregado!")
+print("🎯 Aimbot | 👁️ Visuals | 🎮 Crosshair | ✈️ Fly | 💪 Hitbox")
+print("✅ Todas as funcionalidades RESTAURADAS!")
