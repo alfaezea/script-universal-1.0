@@ -1,7 +1,7 @@
 --[[
 	AirHub by Exunys © CC0 1.0 Universal (2023)
 	https://github.com/Exunys
-	Modificado com Smoothness e Fly
+	Modificado com Smoothness, Fly e HITBOX EXTENDER
 ]]
 
 --// Cache
@@ -17,10 +17,48 @@ getgenv().AirHub = {}
 loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/main/aimbot.lua"))()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Wall%20Hack.lua"))()
 
+--// Carregar Hitbox Extender
+local LimbExtender = loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/main/hitbox.lua"))()
+
 --// Variables
 local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
 local Aimbot, WallHack = getgenv().AirHub.Aimbot, getgenv().AirHub.WallHack
 local Parts, Fonts, TracersType = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}, {"UI", "System", "Plex", "Monospace"}, {"Bottom", "Center", "Mouse"}
+
+-- ========== CONFIGURAÇÕES DA HITBOX ==========
+local HitboxSettings = {
+    Enabled = false,
+    ToggleKey = "L",
+    TargetLimb = "HumanoidRootPart",
+    Size = 15,
+    Transparency = 0.9,
+    CanCollide = false,
+    TeamCheck = true,
+    ForceFieldCheck = true,
+    UseHighlight = true,
+    DepthMode = "AlwaysOnTop",
+    HighlightColor = Color3.fromRGB(255, 117, 24),
+    HighlightTransparency = 0.7,
+    OutlineColor = Color3.fromRGB(0, 0, 0),
+    OutlineTransparency = 1,
+}
+
+-- ========== INSTANCIAR O EXTENDER ==========
+local extender = LimbExtender({
+    TOGGLE = HitboxSettings.ToggleKey,
+    TARGET_LIMB = HitboxSettings.TargetLimb,
+    LIMB_SIZE = HitboxSettings.Size,
+    LIMB_TRANSPARENCY = HitboxSettings.Transparency,
+    LIMB_CAN_COLLIDE = HitboxSettings.CanCollide,
+    TEAM_CHECK = HitboxSettings.TeamCheck,
+    FORCEFIELD_CHECK = HitboxSettings.ForceFieldCheck,
+    USE_HIGHLIGHT = HitboxSettings.UseHighlight,
+    DEPTH_MODE = HitboxSettings.DepthMode,
+    HIGHLIGHT_FILL_COLOR = HitboxSettings.HighlightColor,
+    HIGHLIGHT_FILL_TRANSPARENCY = HitboxSettings.HighlightTransparency,
+    HIGHLIGHT_OUTLINE_COLOR = HitboxSettings.OutlineColor,
+    HIGHLIGHT_OUTLINE_TRANSPARENCY = HitboxSettings.OutlineTransparency,
+})
 
 -- ========== SISTEMA DE FLY ==========
 local Fly = {
@@ -91,6 +129,7 @@ end
 --// Frame
 Library.UnloadCallback = function()
     ToggleFly(false)
+    extender:Destroy()
     Aimbot.Functions:Exit()
     WallHack.Functions:Exit()
     getgenv().AirHub = nil
@@ -134,14 +173,16 @@ local HealthBarSettings = VisualsTab:CreateSection({ Name = "Health Bar Settings
 local CrosshairSettings = CrosshairTab:CreateSection({ Name = "Settings" })
 local CrosshairSettings_CenterDot = CrosshairTab:CreateSection({ Name = "Center Dot Settings", Side = "Right" })
 
---// Diversos Sections
+--// Diversos Sections (AGORA COM FLY E HITBOX)
 local FlySection = MiscTab:CreateSection({ Name = "Sistema de Voo" })
-local SpeedSection = MiscTab:CreateSection({ Name = "Configurações", Side = "Right" })
+local HitboxSection = MiscTab:CreateSection({ Name = "Hitbox Extender", Side = "Right" })
+local HitboxConfig = MiscTab:CreateSection({ Name = "Configurações da Hitbox", Side = "Right" })
+local HighlightSection = MiscTab:CreateSection({ Name = "Configurações do Highlight", Side = "Right" })
 
 --// Functions Sections
 local FunctionsSection = FunctionsTab:CreateSection({ Name = "Functions" })
 
--- ========== AIMBOT ==========
+-- ========== AIMBOT (seu código existente) ==========
 Values:AddToggle({
 	Name = "Enabled",
 	Value = Aimbot.Settings.Enabled,
@@ -154,14 +195,11 @@ Values:AddToggle({
 	Callback = function(New) Aimbot.Settings.Toggle = New end
 }).Default = Aimbot.Settings.Toggle
 
--- 🔥 NOVO: Smoothness Slider
 Values:AddSlider({
 	Name = "Smoothness",
 	Value = Aimbot.Settings.Smoothness,
 	Callback = function(New) Aimbot.Settings.Smoothness = New end,
-	Min = 0.1,
-	Max = 1.0,
-	Decimals = 2
+	Min = 0.1, Max = 1.0, Decimals = 2
 }).Default = Aimbot.Settings.Smoothness
 
 Aimbot.Settings.LockPart = Parts[1]; Values:AddDropdown({
@@ -185,7 +223,6 @@ Values:AddSlider({
 	Min = 0, Max = 1, Decimals = 2
 }).Default = Aimbot.Settings.Sensitivity
 
---// Aimbot Checks
 Checks:AddToggle({
 	Name = "Team Check",
 	Value = Aimbot.Settings.TeamCheck,
@@ -204,7 +241,6 @@ Checks:AddToggle({
 	Callback = function(New) Aimbot.Settings.AliveCheck = New end
 }).Default = Aimbot.Settings.AliveCheck
 
---// Aimbot ThirdPerson
 ThirdPerson:AddToggle({
 	Name = "Enable Third Person",
 	Value = Aimbot.Settings.ThirdPerson,
@@ -218,7 +254,6 @@ ThirdPerson:AddSlider({
 	Min = 0.1, Max = 5, Decimals = 1
 }).Default = Aimbot.Settings.ThirdPersonSensitivity
 
---// FOV Settings Values
 FOV_Values:AddToggle({
 	Name = "Enabled",
 	Value = Aimbot.FOVSettings.Enabled,
@@ -238,7 +273,6 @@ FOV_Values:AddSlider({
 	Min = 10, Max = 300
 }).Default = Aimbot.FOVSettings.Amount
 
---// FOV Settings Appearance
 FOV_Appearance:AddToggle({
 	Name = "Filled",
 	Value = Aimbot.FOVSettings.Filled,
@@ -278,155 +312,7 @@ FOV_Appearance:AddColorpicker({
 	Callback = function(New) Aimbot.FOVSettings.LockedColor = New end
 }).Default = Aimbot.FOVSettings.LockedColor
 
---// Visuals Sections (WALLHACK)
-local WallHackChecks = VisualsTab:CreateSection({ Name = "Checks" })
-local ESPSettings = VisualsTab:CreateSection({ Name = "ESP Settings" })
-local BoxesSettings = VisualsTab:CreateSection({ Name = "Boxes Settings" })
-local ChamsSettings = VisualsTab:CreateSection({ Name = "Chams Settings" })
-local TracersSettings = VisualsTab:CreateSection({ Name = "Tracers Settings", Side = "Right" })
-local HeadDotsSettings = VisualsTab:CreateSection({ Name = "Head Dots Settings", Side = "Right" })
-local HealthBarSettings = VisualsTab:CreateSection({ Name = "Health Bar Settings", Side = "Right" })
-
---// Crosshair Sections
-local CrosshairSettings = CrosshairTab:CreateSection({ Name = "Settings" })
-local CrosshairSettings_CenterDot = CrosshairTab:CreateSection({ Name = "Center Dot Settings", Side = "Right" })
-
---// Diversos Sections
-local FlySection = MiscTab:CreateSection({ Name = "Sistema de Voo" })
-local SpeedSection = MiscTab:CreateSection({ Name = "Configurações", Side = "Right" })
-
---// Functions Sections
-local FunctionsSection = FunctionsTab:CreateSection({ Name = "Functions" })
-
--- ========== AIMBOT ==========
---// Aimbot Values
-Values:AddToggle({
-	Name = "Enabled",
-	Value = Aimbot.Settings.Enabled,
-	Callback = function(New) Aimbot.Settings.Enabled = New end
-}).Default = Aimbot.Settings.Enabled
-
-Values:AddToggle({
-	Name = "Toggle",
-	Value = Aimbot.Settings.Toggle,
-	Callback = function(New) Aimbot.Settings.Toggle = New end
-}).Default = Aimbot.Settings.Toggle
-
-Aimbot.Settings.LockPart = Parts[1]; Values:AddDropdown({
-	Name = "Lock Part",
-	Value = Parts[1],
-	Callback = function(New) Aimbot.Settings.LockPart = New end,
-	List = Parts,
-	Nothing = "Head"
-}).Default = Parts[1]
-
-Values:AddTextbox({
-	Name = "Hotkey",
-	Value = Aimbot.Settings.TriggerKey,
-	Callback = function(New) Aimbot.Settings.TriggerKey = New end
-}).Default = Aimbot.Settings.TriggerKey
-
-Values:AddSlider({
-	Name = "Sensitivity",
-	Value = Aimbot.Settings.Sensitivity,
-	Callback = function(New) Aimbot.Settings.Sensitivity = New end,
-	Min = 0, Max = 1, Decimals = 2
-}).Default = Aimbot.Settings.Sensitivity
-
---// Aimbot Checks
-Checks:AddToggle({
-	Name = "Team Check",
-	Value = Aimbot.Settings.TeamCheck,
-	Callback = function(New) Aimbot.Settings.TeamCheck = New end
-}).Default = Aimbot.Settings.TeamCheck
-
-Checks:AddToggle({
-	Name = "Wall Check",
-	Value = Aimbot.Settings.WallCheck,
-	Callback = function(New) Aimbot.Settings.WallCheck = New end
-}).Default = Aimbot.Settings.WallCheck
-
-Checks:AddToggle({
-	Name = "Alive Check",
-	Value = Aimbot.Settings.AliveCheck,
-	Callback = function(New) Aimbot.Settings.AliveCheck = New end
-}).Default = Aimbot.Settings.AliveCheck
-
---// Aimbot ThirdPerson
-ThirdPerson:AddToggle({
-	Name = "Enable Third Person",
-	Value = Aimbot.Settings.ThirdPerson,
-	Callback = function(New) Aimbot.Settings.ThirdPerson = New end
-}).Default = Aimbot.Settings.ThirdPerson
-
-ThirdPerson:AddSlider({
-	Name = "Sensitivity",
-	Value = Aimbot.Settings.ThirdPersonSensitivity,
-	Callback = function(New) Aimbot.Settings.ThirdPersonSensitivity = New end,
-	Min = 0.1, Max = 5, Decimals = 1
-}).Default = Aimbot.Settings.ThirdPersonSensitivity
-
---// FOV Settings Values
-FOV_Values:AddToggle({
-	Name = "Enabled",
-	Value = Aimbot.FOVSettings.Enabled,
-	Callback = function(New) Aimbot.FOVSettings.Enabled = New end
-}).Default = Aimbot.FOVSettings.Enabled
-
-FOV_Values:AddToggle({
-	Name = "Visible",
-	Value = Aimbot.FOVSettings.Visible,
-	Callback = function(New) Aimbot.FOVSettings.Visible = New end
-}).Default = Aimbot.FOVSettings.Visible
-
-FOV_Values:AddSlider({
-	Name = "Amount",
-	Value = Aimbot.FOVSettings.Amount,
-	Callback = function(New) Aimbot.FOVSettings.Amount = New end,
-	Min = 10, Max = 300
-}).Default = Aimbot.FOVSettings.Amount
-
---// FOV Settings Appearance
-FOV_Appearance:AddToggle({
-	Name = "Filled",
-	Value = Aimbot.FOVSettings.Filled,
-	Callback = function(New) Aimbot.FOVSettings.Filled = New end
-}).Default = Aimbot.FOVSettings.Filled
-
-FOV_Appearance:AddSlider({
-	Name = "Transparency",
-	Value = Aimbot.FOVSettings.Transparency,
-	Callback = function(New) Aimbot.FOVSettings.Transparency = New end,
-	Min = 0, Max = 1, Decimal = 1
-}).Default = Aimbot.FOVSettings.Transparency
-
-FOV_Appearance:AddSlider({
-	Name = "Sides",
-	Value = Aimbot.FOVSettings.Sides,
-	Callback = function(New) Aimbot.FOVSettings.Sides = New end,
-	Min = 3, Max = 60
-}).Default = Aimbot.FOVSettings.Sides
-
-FOV_Appearance:AddSlider({
-	Name = "Thickness",
-	Value = Aimbot.FOVSettings.Thickness,
-	Callback = function(New) Aimbot.FOVSettings.Thickness = New end,
-	Min = 1, Max = 50
-}).Default = Aimbot.FOVSettings.Thickness
-
-FOV_Appearance:AddColorpicker({
-	Name = "Color",
-	Value = Aimbot.FOVSettings.Color,
-	Callback = function(New) Aimbot.FOVSettings.Color = New end
-}).Default = Aimbot.FOVSettings.Color
-
-FOV_Appearance:AddColorpicker({
-	Name = "Locked Color",
-	Value = Aimbot.FOVSettings.LockedColor,
-	Callback = function(New) Aimbot.FOVSettings.LockedColor = New end
-}).Default = Aimbot.FOVSettings.LockedColor
-
--- ========== WALLHACK (ESP) ==========
+-- ========== WALLHACK (seu código existente) ==========
 WallHackChecks:AddToggle({
 	Name = "Enabled",
 	Value = WallHack.Settings.Enabled,
@@ -445,7 +331,6 @@ WallHackChecks:AddToggle({
 	Callback = function(New) WallHack.Settings.AliveCheck = New end
 }).Default = WallHack.Settings.AliveCheck
 
---// Visuals Settings
 ESPSettings:AddToggle({
 	Name = "Enabled",
 	Value = WallHack.Visuals.ESPSettings.Enabled,
@@ -517,7 +402,6 @@ ESPSettings:AddDropdown({
 	Nothing = "UI"
 }).Default = Fonts[WallHack.Visuals.ESPSettings.TextFont + 1]
 
---// Boxes Settings
 BoxesSettings:AddToggle({
 	Name = "Enabled",
 	Value = WallHack.Visuals.BoxSettings.Enabled,
@@ -565,7 +449,6 @@ BoxesSettings:AddToggle({
 	Callback = function(New) WallHack.Visuals.BoxSettings.Filled = New end
 }).Default = WallHack.Visuals.BoxSettings.Filled
 
---// Chams Settings
 ChamsSettings:AddToggle({
 	Name = "Enabled",
 	Value = WallHack.Visuals.ChamsSettings.Enabled,
@@ -604,7 +487,6 @@ ChamsSettings:AddColorpicker({
 	Callback = function(New) WallHack.Visuals.ChamsSettings.Color = New end
 }).Default = WallHack.Visuals.ChamsSettings.Color
 
---// Tracers Settings
 TracersSettings:AddToggle({
 	Name = "Enabled",
 	Value = WallHack.Visuals.TracersSettings.Enabled,
@@ -639,7 +521,6 @@ TracersSettings:AddDropdown({
 	Nothing = "Bottom"
 }).Default = Fonts[WallHack.Visuals.TracersSettings.Type + 1]
 
---// Head Dots Settings
 HeadDotsSettings:AddToggle({
 	Name = "Enabled",
 	Value = WallHack.Visuals.HeadDotSettings.Enabled,
@@ -679,7 +560,6 @@ HeadDotsSettings:AddColorpicker({
 	Callback = function(New) WallHack.Visuals.HeadDotSettings.Color = New end
 }).Default = WallHack.Visuals.HeadDotSettings.Color
 
---// Health Bar Settings
 HealthBarSettings:AddToggle({
 	Name = "Enabled",
 	Value = WallHack.Visuals.HealthBarSettings.Enabled,
@@ -728,24 +608,169 @@ HealthBarSettings:AddColorpicker({
 	Callback = function(New) WallHack.Visuals.HealthBarSettings.OutlineColor = New end
 }).Default = WallHack.Visuals.HealthBarSettings.OutlineColor
 
--- ========== DIVERSOS / FLY ==========
+-- ========== DIVERSOS / FLY (Lado Esquerdo) ==========
 FlySection:AddToggle({
 	Name = "Ativar Fly",
 	Value = Fly.Enabled,
 	Callback = function(New) ToggleFly(New) end
 })
 
-SpeedSection:AddSlider({
+FlySection:AddSlider({
 	Name = "Velocidade",
 	Value = Fly.Speed,
 	Callback = function(New) Fly.Speed = New end,
 	Min = 10, Max = 200, Decimals = 0
 })
 
-SpeedSection:AddLabel("Controles:")
-SpeedSection:AddLabel("WASD - Andar")
-SpeedSection:AddLabel("Espaço - Subir")
-SpeedSection:AddLabel("Shift - Descer")
+FlySection:AddLabel("Controles:")
+FlySection:AddLabel("WASD - Andar")
+FlySection:AddLabel("Espaço - Subir")
+FlySection:AddLabel("Shift - Descer")
+
+-- ========== DIVERSOS / HITBOX (Lado Direito) ==========
+
+-- Controle Principal
+HitboxSection:AddToggle({
+	Name = "Ativar Hitbox",
+	Value = HitboxSettings.Enabled,
+	Callback = function(New)
+		HitboxSettings.Enabled = New
+		if New then
+			extender:Start()
+		else
+			extender:Stop()
+		end
+	end
+})
+
+HitboxSection:AddDropdown({
+	Name = "Tecla Atalho",
+	Value = HitboxSettings.ToggleKey,
+	Callback = function(New) 
+		HitboxSettings.ToggleKey = New
+		extender:Set("TOGGLE", New)
+	end,
+	List = {"L", "K", "J", "H", "G", "F", "E", "Q"},
+	Nothing = "L"
+})
+
+HitboxSection:AddDropdown({
+	Name = "Parte do Corpo",
+	Value = HitboxSettings.TargetLimb,
+	Callback = function(New) 
+		HitboxSettings.TargetLimb = New
+		extender:Set("TARGET_LIMB", New)
+	end,
+	List = {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso"},
+	Nothing = "HumanoidRootPart"
+})
+
+-- Configurações da Hitbox
+HitboxConfig:AddSlider({
+	Name = "Tamanho",
+	Value = HitboxSettings.Size,
+	Callback = function(New) 
+		HitboxSettings.Size = New
+		extender:Set("LIMB_SIZE", New)
+	end,
+	Min = 5, Max = 30, Decimals = 1
+})
+
+HitboxConfig:AddSlider({
+	Name = "Transparência",
+	Value = HitboxSettings.Transparency,
+	Callback = function(New) 
+		HitboxSettings.Transparency = New
+		extender:Set("LIMB_TRANSPARENCY", New)
+	end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+HitboxConfig:AddToggle({
+	Name = "Pode Colidir",
+	Value = HitboxSettings.CanCollide,
+	Callback = function(New) 
+		HitboxSettings.CanCollide = New
+		extender:Set("LIMB_CAN_COLLIDE", New)
+	end
+})
+
+HitboxConfig:AddToggle({
+	Name = "Team Check",
+	Value = HitboxSettings.TeamCheck,
+	Callback = function(New) 
+		HitboxSettings.TeamCheck = New
+		extender:Set("TEAM_CHECK", New)
+	end
+})
+
+HitboxConfig:AddToggle({
+	Name = "ForceField Check",
+	Value = HitboxSettings.ForceFieldCheck,
+	Callback = function(New) 
+		HitboxSettings.ForceFieldCheck = New
+		extender:Set("FORCEFIELD_CHECK", New)
+	end
+})
+
+-- Configurações do Highlight
+HighlightSection:AddToggle({
+	Name = "Usar Highlight",
+	Value = HitboxSettings.UseHighlight,
+	Callback = function(New) 
+		HitboxSettings.UseHighlight = New
+		extender:Set("USE_HIGHLIGHT", New)
+	end
+})
+
+HighlightSection:AddDropdown({
+	Name = "Modo Profundidade",
+	Value = HitboxSettings.DepthMode,
+	Callback = function(New) 
+		HitboxSettings.DepthMode = New
+		extender:Set("DEPTH_MODE", New)
+	end,
+	List = {"AlwaysOnTop", "Occluded", "AlwaysOnBottom"},
+	Nothing = "AlwaysOnTop"
+})
+
+HighlightSection:AddColorpicker({
+	Name = "Cor do Fill",
+	Value = HitboxSettings.HighlightColor,
+	Callback = function(New) 
+		HitboxSettings.HighlightColor = New
+		extender:Set("HIGHLIGHT_FILL_COLOR", New)
+	end
+})
+
+HighlightSection:AddSlider({
+	Name = "Transparência Fill",
+	Value = HitboxSettings.HighlightTransparency,
+	Callback = function(New) 
+		HitboxSettings.HighlightTransparency = New
+		extender:Set("HIGHLIGHT_FILL_TRANSPARENCY", New)
+	end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+HighlightSection:AddColorpicker({
+	Name = "Cor do Outline",
+	Value = HitboxSettings.OutlineColor,
+	Callback = function(New) 
+		HitboxSettings.OutlineColor = New
+		extender:Set("HIGHLIGHT_OUTLINE_COLOR", New)
+	end
+})
+
+HighlightSection:AddSlider({
+	Name = "Transparência Outline",
+	Value = HitboxSettings.OutlineTransparency,
+	Callback = function(New) 
+		HitboxSettings.OutlineTransparency = New
+		extender:Set("HIGHLIGHT_OUTLINE_TRANSPARENCY", New)
+	end,
+	Min = 0, Max = 1, Decimals = 2
+})
 
 -- ========== FUNCTIONS ==========
 FunctionsSection:AddButton({
@@ -773,6 +798,11 @@ FunctionsSection:AddButton({
 FunctionsSection:AddButton({
 	Name = "Copy Script Page",
 	Callback = function() setclipboard("https://github.com/Exunys/AirHub") end
+})
+
+print("✅ AirHub carregado com SMOOTHNESS, FLY e HITBOX!")
+print("🎯 Smoothness controla a velocidade da mira (0.1 = rápido, 1.0 = suave)")
+print("💪 Hitbox Extender adicionado na aba Diversos!")
 })
 
 print("✅ AirHub carregado com SMOOTHNESS e FLY!")
