@@ -44,7 +44,7 @@ end
 -- ========== CARREGAR MÓDULOS ==========
 print("🔄 Carregando AirHub Premium...")
 
--- Carregar ESP AVANÇADO (substitua pela sua URL)
+-- Carregar ESP AVANÇADO
 print("🔄 Carregando ESP Avançado...")
 local espScript = game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua")
 local espFunc, espErr = loadstring(espScript)
@@ -58,12 +58,24 @@ end
 -- Carregar Aimbot
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
 
+-- Carregar Módulo Diversos (Anti-Spread, No Clip, Infinite Jump)
+print("🔄 Carregando Módulo Diversos...")
+local diversosScript = game:HttpGet("https://raw.githubusercontent.com/SEU-USER/SEU-REPO/main/diversos.lua") -- SUBSTITUA PELA URL
+local diversosFunc, diversosErr = loadstring(diversosScript)
+if diversosFunc then
+    pcall(diversosFunc)
+    print("✅ Módulo Diversos carregado!")
+else
+    warn("❌ Erro no Diversos: " .. tostring(diversosErr))
+end
+
 -- Aguardar carregamento
 task.wait(2)
 
 -- ========== OBTER REFERÊNCIAS ==========
 local ESP = getgenv().AirHub and getgenv().AirHub.ESP_Avancado
 local Aimbot = getgenv().AirHub and getgenv().AirHub.Aimbot
+local Diversos = getgenv().AirHub and getgenv().AirHub.Diversos
 
 -- ========== SISTEMA DE FLY EMBUTIDO ==========
 local Fly = {
@@ -134,8 +146,8 @@ ScreenGui.Parent = game:GetService("CoreGui")
 
 -- Frame principal
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 700, 0, 550)  -- Aumentado para comportar mais opções
-MainFrame.Position = UDim2.new(0.5, -350, 0.5, -275)
+MainFrame.Size = UDim2.new(0, 700, 0, 600)  -- Aumentado para comportar mais opções
+MainFrame.Position = UDim2.new(0.5, -350, 0.5, -300)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -159,7 +171,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 Title.BorderSizePixel = 0
-Title.Text = "AIRHUB PREMIUM - ESP AVANÇADO"
+Title.Text = "AIRHUB PREMIUM - ESP AVANÇADO + DIVERSOS"
 Title.TextColor3 = Color3.fromRGB(255, 128, 0)
 Title.TextScaled = true
 Title.Font = Enum.Font.GothamBold
@@ -180,6 +192,7 @@ CloseBtn.Parent = MainFrame
 CloseBtn.MouseButton1Click:Connect(function()
     if Fly.Enabled then ToggleFly(false) end
     if ESP and ESP.Functions and ESP.Functions.Exit then ESP.Functions:Exit() end
+    if Diversos and Diversos.Destroy then Diversos:Destroy() end
     ScreenGui:Destroy()
 end)
 
@@ -207,8 +220,8 @@ end
 
 createStatus("ESP: " .. (ESP and "✅" or "❌"), ESP and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 10)
 createStatus("Aimbot: " .. (Aimbot and "✅" or "❌"), Aimbot and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 180)
-createStatus("Fly: ✅", Color3.fromRGB(0, 255, 0), 350)
-createStatus("Diversos: ✅", Color3.fromRGB(0, 255, 0), 520)
+createStatus("Diversos: " .. (Diversos and "✅" or "❌"), Diversos and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 350)
+createStatus("Fly: ✅", Color3.fromRGB(0, 255, 0), 520)
 
 -- Abas
 local TabContainer = Instance.new("Frame")
@@ -356,7 +369,7 @@ local function createSlider(parent, text, yPos, min, max, getFunc, setFunc, form
 end
 
 -- ========== CRIAR ABAS ==========
-local tabESP = createTab("⚡ ESP AVANÇADO", 1)
+local tabESP = createTab("⚡ ESP", 1)
 local tabAimbot = createTab("🎯 AIMBOT", 2)
 local tabDiversos = createTab("🔧 DIVERSOS", 3)
 local tabFly = createTab("✈️ FLY", 4)
@@ -507,12 +520,12 @@ if ESP then
     sec3.Parent = espContent
     yPos = yPos + 30
     
-    createToggle(espContent, "👥 Team Check (Não mostrar aliados)", yPos,
+    createToggle(espContent, "👥 Team Check", yPos,
         function() return ESP.Settings.TeamCheck end,
         function(v) ESP.Settings.TeamCheck = v end)
     yPos = yPos + 45
     
-    createToggle(espContent, "💀 Alive Check (Só mostrar vivos)", yPos,
+    createToggle(espContent, "💀 Alive Check", yPos,
         function() return ESP.Settings.AliveCheck end,
         function(v) ESP.Settings.AliveCheck = v end)
     yPos = yPos + 45
@@ -588,7 +601,7 @@ if ESP then
     end)
     yPos = yPos + 40
     
-    -- Render Every (controle de performance)
+    -- Render Every
     local renderLabel = Instance.new("TextLabel")
     renderLabel.Size = UDim2.new(0, 200, 0, 30)
     renderLabel.Position = UDim2.new(0, 20, 0, yPos)
@@ -645,27 +658,13 @@ if ESP then
     end)
     yPos = yPos + 45
     
-    -- INFO DE OTIMIZAÇÃO
-    local infoBox = Instance.new("TextLabel")
-    infoBox.Size = UDim2.new(1, -20, 0, 60)
-    infoBox.Position = UDim2.new(0, 10, 0, yPos)
-    infoBox.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    infoBox.BorderSizePixel = 0
-    infoBox.Text = "⚡ OTIMIZAÇÕES ATIVAS:\n• Render a cada " .. (ESP.Performance.RenderEvery or 2) .. " frames\n• Distância máxima: " .. (ESP.Settings.MaxDistance or 1000) .. "m\n• Cache inteligente • Anti-lag"
-    infoBox.TextColor3 = Color3.fromRGB(0, 255, 0)
-    infoBox.TextWrapped = true
-    infoBox.TextScaled = true
-    infoBox.Font = Enum.Font.Gotham
-    infoBox.Parent = espContent
-    yPos = yPos + 70
-    
     espContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 else
     local err = Instance.new("TextLabel")
     err.Size = UDim2.new(1, 0, 0, 100)
     err.Position = UDim2.new(0, 0, 0, 20)
     err.BackgroundTransparency = 1
-    err.Text = "❌ ESP AVANÇADO NÃO CARREGADO!\n\nVerifique se:\n1. A URL do script está correta\n2. O script está hospedado no GitHub\n3. O nome do arquivo é 'esp-avancado.lua'"
+    err.Text = "❌ ESP AVANÇADO NÃO CARREGADO!"
     err.TextColor3 = Color3.fromRGB(255, 0, 0)
     err.TextWrapped = true
     err.TextScaled = true
@@ -673,7 +672,7 @@ else
     err.Parent = espContent
 end
 
--- ========== CONTEÚDO AIMBOT (mantido igual) ==========
+-- ========== CONTEÚDO AIMBOT ==========
 local aimbotContent = Instance.new("ScrollingFrame")
 aimbotContent.Size = UDim2.new(1, 0, 1, 0)
 aimbotContent.BackgroundTransparency = 1
@@ -744,64 +743,275 @@ else
     err.Parent = aimbotContent
 end
 
--- ========== CONTEÚDO DIVERSOS (mantido igual) ==========
+-- ========== CONTEÚDO DIVERSOS (ATUALIZADO) ==========
 local diversosContent = Instance.new("ScrollingFrame")
 diversosContent.Size = UDim2.new(1, 0, 1, 0)
 diversosContent.BackgroundTransparency = 1
 diversosContent.BorderSizePixel = 0
 diversosContent.ScrollBarThickness = 5
-diversosContent.CanvasSize = UDim2.new(0, 0, 0, 400)
+diversosContent.CanvasSize = UDim2.new(0, 0, 0, 800)
 diversosContent.Visible = false
 diversosContent.Parent = ContentFrame
 
-local yPos = 10
-
-local titleDiv = Instance.new("TextLabel")
-titleDiv.Size = UDim2.new(1, -20, 0, 30)
-titleDiv.Position = UDim2.new(0, 10, 0, yPos)
-titleDiv.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
-titleDiv.BorderSizePixel = 0
-titleDiv.Text = "⚙️ UTILITÁRIOS ⚙️"
-titleDiv.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleDiv.TextScaled = true
-titleDiv.Font = Enum.Font.GothamBold
-titleDiv.Parent = diversosContent
-yPos = yPos + 40
-
-local antiAimToggle = createToggle(diversosContent, "Anti-Aim (Em breve)", yPos,
-    function() return false end,
-    function(v) 
-        if v then print("🔄 Anti-Aim (Em desenvolvimento)") end
+if Diversos then
+    local yPos = 10
+    
+    -- TÍTULO PRINCIPAL
+    local titleDiv = Instance.new("TextLabel")
+    titleDiv.Size = UDim2.new(1, -20, 0, 35)
+    titleDiv.Position = UDim2.new(0, 10, 0, yPos)
+    titleDiv.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
+    titleDiv.BorderSizePixel = 0
+    titleDiv.Text = "⚙️ MÓDULO DIVERSOS ⚙️"
+    titleDiv.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleDiv.TextScaled = true
+    titleDiv.Font = Enum.Font.GothamBold
+    titleDiv.Parent = diversosContent
+    yPos = yPos + 45
+    
+    -- ===== SEÇÃO: ANTI-SPREAD =====
+    local secAS = Instance.new("TextLabel")
+    secAS.Size = UDim2.new(1, -20, 0, 25)
+    secAS.Position = UDim2.new(0, 10, 0, yPos)
+    secAS.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    secAS.BorderSizePixel = 0
+    secAS.Text = "   🎯 ANTI-SPREAD"
+    secAS.TextColor3 = Color3.fromRGB(255, 200, 100)
+    secAS.TextXAlignment = Enum.TextXAlignment.Left
+    secAS.TextScaled = true
+    secAS.Font = Enum.Font.GothamBold
+    secAS.Parent = diversosContent
+    yPos = yPos + 30
+    
+    -- Toggle Anti-Spread
+    createToggle(diversosContent, "🎯 Ativar Anti-Spread", yPos,
+        function() return Diversos.Settings.AntiSpread.Enabled end,
+        function(v) Diversos:ToggleAntiSpread(v) end)
+    yPos = yPos + 45
+    
+    -- Precisão (Accuracy)
+    createSlider(diversosContent, "Precisão", yPos, 0, 100,
+        function() return Diversos.Settings.AntiSpread.Accuracy end,
+        function(v) 
+            Diversos.Settings.AntiSpread.Accuracy = v
+            if Diversos.Settings.AntiSpread.Enabled then
+                Diversos:ToggleAntiSpread(false)
+                Diversos:ToggleAntiSpread(true)
+            end
+        end, "int")
+    yPos = yPos + 60
+    
+    -- Modo do Anti-Spread
+    local modeLabel = Instance.new("TextLabel")
+    modeLabel.Size = UDim2.new(0, 200, 0, 30)
+    modeLabel.Position = UDim2.new(0, 20, 0, yPos)
+    modeLabel.BackgroundTransparency = 1
+    modeLabel.Text = "Modo:"
+    modeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    modeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    modeLabel.TextScaled = true
+    modeLabel.Font = Enum.Font.Gotham
+    modeLabel.Parent = diversosContent
+    
+    local modeBtn = Instance.new("TextButton")
+    modeBtn.Size = UDim2.new(0, 100, 0, 25)
+    modeBtn.Position = UDim2.new(0, 200, 0, yPos + 2.5)
+    modeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    modeBtn.BorderSizePixel = 0
+    modeBtn.Text = Diversos.Settings.AntiSpread.Mode
+    modeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    modeBtn.TextScaled = true
+    modeBtn.Font = Enum.Font.Gotham
+    modeBtn.Parent = diversosContent
+    
+    modeBtn.MouseButton1Click:Connect(function()
+        if Diversos.Settings.AntiSpread.Mode == "Silent" then
+            Diversos.Settings.AntiSpread.Mode = "Visual"
+        else
+            Diversos.Settings.AntiSpread.Mode = "Silent"
+        end
+        modeBtn.Text = Diversos.Settings.AntiSpread.Mode
+        if Diversos.Settings.AntiSpread.Enabled then
+            Diversos:ToggleAntiSpread(false)
+            Diversos:ToggleAntiSpread(true)
+        end
     end)
-yPos = yPos + 45
+    yPos = yPos + 40
+    
+    -- Hotkey Anti-Spread
+    local hotkeyLabel = Instance.new("TextLabel")
+    hotkeyLabel.Size = UDim2.new(0, 200, 0, 30)
+    hotkeyLabel.Position = UDim2.new(0, 20, 0, yPos)
+    hotkeyLabel.BackgroundTransparency = 1
+    hotkeyLabel.Text = "Hotkey: F1"
+    hotkeyLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    hotkeyLabel.TextXAlignment = Enum.TextXAlignment.Left
+    hotkeyLabel.TextScaled = true
+    hotkeyLabel.Font = Enum.Font.Gotham
+    hotkeyLabel.Parent = diversosContent
+    yPos = yPos + 35
+    
+    -- Separador
+    local sep1 = Instance.new("Frame")
+    sep1.Size = UDim2.new(1, -40, 0, 1)
+    sep1.Position = UDim2.new(0, 20, 0, yPos)
+    sep1.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+    sep1.BorderSizePixel = 0
+    sep1.Parent = diversosContent
+    yPos = yPos + 15
+    
+    -- ===== SEÇÃO: NO CLIP =====
+    local secNC = Instance.new("TextLabel")
+    secNC.Size = UDim2.new(1, -20, 0, 25)
+    secNC.Position = UDim2.new(0, 10, 0, yPos)
+    secNC.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    secNC.BorderSizePixel = 0
+    secNC.Text = "   🧱 NO CLIP"
+    secNC.TextColor3 = Color3.fromRGB(100, 200, 255)
+    secNC.TextXAlignment = Enum.TextXAlignment.Left
+    secNC.TextScaled = true
+    secNC.Font = Enum.Font.GothamBold
+    secNC.Parent = diversosContent
+    yPos = yPos + 30
+    
+    -- Toggle No Clip
+    createToggle(diversosContent, "🧱 Ativar No Clip", yPos,
+        function() return Diversos.Settings.NoClip.Enabled end,
+        function(v) Diversos:ToggleNoClip(v) end)
+    yPos = yPos + 45
+    
+    -- Velocidade No Clip
+    createSlider(diversosContent, "Velocidade", yPos, 16, 200,
+        function() return Diversos.Settings.NoClip.Speed end,
+        function(v) 
+            Diversos.Settings.NoClip.Speed = v
+            if Diversos.Settings.NoClip.Enabled then
+                Diversos:ToggleNoClip(false)
+                Diversos:ToggleNoClip(true)
+            end
+        end, "int")
+    yPos = yPos + 60
+    
+    -- Toggle Ignorar Água
+    createToggle(diversosContent, "💧 Ignorar Água", yPos,
+        function() return Diversos.Settings.NoClip.IgnoreWater end,
+        function(v) 
+            Diversos.Settings.NoClip.IgnoreWater = v
+            if Diversos.Settings.NoClip.Enabled then
+                Diversos:ToggleNoClip(false)
+                Diversos:ToggleNoClip(true)
+            end
+        end)
+    yPos = yPos + 45
+    
+    -- Hotkey No Clip
+    local hotkeyNC = Instance.new("TextLabel")
+    hotkeyNC.Size = UDim2.new(0, 200, 0, 30)
+    hotkeyNC.Position = UDim2.new(0, 20, 0, yPos)
+    hotkeyNC.BackgroundTransparency = 1
+    hotkeyNC.Text = "Hotkey: F2"
+    hotkeyNC.TextColor3 = Color3.fromRGB(200, 200, 200)
+    hotkeyNC.TextXAlignment = Enum.TextXAlignment.Left
+    hotkeyNC.TextScaled = true
+    hotkeyNC.Font = Enum.Font.Gotham
+    hotkeyNC.Parent = diversosContent
+    yPos = yPos + 35
+    
+    -- Separador
+    local sep2 = Instance.new("Frame")
+    sep2.Size = UDim2.new(1, -40, 0, 1)
+    sep2.Position = UDim2.new(0, 20, 0, yPos)
+    sep2.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+    sep2.BorderSizePixel = 0
+    sep2.Parent = diversosContent
+    yPos = yPos + 15
+    
+    -- ===== SEÇÃO: INFINITE JUMP =====
+    local secIJ = Instance.new("TextLabel")
+    secIJ.Size = UDim2.new(1, -20, 0, 25)
+    secIJ.Position = UDim2.new(0, 10, 0, yPos)
+    secIJ.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    secIJ.BorderSizePixel = 0
+    secIJ.Text = "   🦘 INFINITE JUMP"
+    secIJ.TextColor3 = Color3.fromRGB(100, 255, 100)
+    secIJ.TextXAlignment = Enum.TextXAlignment.Left
+    secIJ.TextScaled = true
+    secIJ.Font = Enum.Font.GothamBold
+    secIJ.Parent = diversosContent
+    yPos = yPos + 30
+    
+    -- Toggle Infinite Jump
+    createToggle(diversosContent, "🦘 Ativar Infinite Jump", yPos,
+        function() return Diversos.Settings.InfiniteJump.Enabled end,
+        function(v) Diversos:ToggleInfiniteJump(v) end)
+    yPos = yPos + 45
+    
+    -- Altura do Pulo
+    createSlider(diversosContent, "Altura do Pulo", yPos, 20, 200,
+        function() return Diversos.Settings.InfiniteJump.Height end,
+        function(v) 
+            Diversos.Settings.InfiniteJump.Height = v
+            if Diversos.Settings.InfiniteJump.Enabled then
+                Diversos:ToggleInfiniteJump(false)
+                Diversos:ToggleInfiniteJump(true)
+            end
+        end, "int")
+    yPos = yPos + 60
+    
+    -- Controle Aéreo
+    createToggle(diversosContent, "🎮 Controle Aéreo", yPos,
+        function() return Diversos.Settings.InfiniteJump.AirControl end,
+        function(v) 
+            Diversos.Settings.InfiniteJump.AirControl = v
+            if Diversos.Settings.InfiniteJump.Enabled then
+                Diversos:ToggleInfiniteJump(false)
+                Diversos:ToggleInfiniteJump(true)
+            end
+        end)
+    yPos = yPos + 45
+    
+    -- Hotkey Infinite Jump
+    local hotkeyIJ = Instance.new("TextLabel")
+    hotkeyIJ.Size = UDim2.new(0, 200, 0, 30)
+    hotkeyIJ.Position = UDim2.new(0, 20, 0, yPos)
+    hotkeyIJ.BackgroundTransparency = 1
+    hotkeyIJ.Text = "Hotkey: F3"
+    hotkeyIJ.TextColor3 = Color3.fromRGB(200, 200, 200)
+    hotkeyIJ.TextXAlignment = Enum.TextXAlignment.Left
+    hotkeyIJ.TextScaled = true
+    hotkeyIJ.Font = Enum.Font.Gotham
+    hotkeyIJ.Parent = diversosContent
+    yPos = yPos + 35
+    
+    -- INFO RODAPÉ
+    local infoFooter = Instance.new("TextLabel")
+    infoFooter.Size = UDim2.new(1, -20, 0, 40)
+    infoFooter.Position = UDim2.new(0, 10, 0, yPos + 10)
+    infoFooter.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    infoFooter.BorderSizePixel = 0
+    infoFooter.Text = "⚡ Hotkeys:\nF1 = Anti-Spread | F2 = No Clip | F3 = Infinite Jump"
+    infoFooter.TextColor3 = Color3.fromRGB(255, 255, 0)
+    infoFooter.TextWrapped = true
+    infoFooter.TextScaled = true
+    infoFooter.Font = Enum.Font.Gotham
+    infoFooter.Parent = diversosContent
+    yPos = yPos + 55
+    
+    diversosContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
+else
+    local err = Instance.new("TextLabel")
+    err.Size = UDim2.new(1, 0, 0, 100)
+    err.Position = UDim2.new(0, 0, 0, 20)
+    err.BackgroundTransparency = 1
+    err.Text = "❌ MÓDULO DIVERSOS NÃO CARREGADO!\n\nVerifique a URL do módulo"
+    err.TextColor3 = Color3.fromRGB(255, 0, 0)
+    err.TextWrapped = true
+    err.TextScaled = true
+    err.Font = Enum.Font.Gotham
+    err.Parent = diversosContent
+end
 
-local noClipToggle = createToggle(diversosContent, "No Clip (Em breve)", yPos,
-    function() return false end,
-    function(v)
-        if v then print("🧱 No Clip (Em desenvolvimento)") end
-    end)
-yPos = yPos + 45
-
-local speedSlider = createSlider(diversosContent, "Speed Hack (Em breve)", yPos, 16, 100,
-    function() return 16 end,
-    function(v) print("⚡ Speed: " .. v .. " (Em desenvolvimento)") end, "int")
-yPos = yPos + 60
-
-local jumpSlider = createSlider(diversosContent, "Jump Power (Em breve)", yPos, 50, 200,
-    function() return 50 end,
-    function(v) print("🦘 Jump: " .. v .. " (Em desenvolvimento)") end, "int")
-yPos = yPos + 60
-
-local infJumpToggle = createToggle(diversosContent, "Infinito Jump (Em breve)", yPos,
-    function() return false end,
-    function(v)
-        if v then print("🦘 Infinito Jump (Em desenvolvimento)") end
-    end)
-yPos = yPos + 45
-
-diversosContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
-
--- ========== CONTEÚDO FLY (mantido igual) ==========
+-- ========== CONTEÚDO FLY ==========
 local flyContent = Instance.new("Frame")
 flyContent.Size = UDim2.new(1, 0, 1, 0)
 flyContent.BackgroundTransparency = 1
@@ -876,5 +1086,5 @@ espContent.Visible = true
 tabESP.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
 
 print("✅ AirHub Premium carregado com sucesso!")
-print("📌 ESP AVANÇADO - Todas as features!")
-print("⚡ Otimizações: Render seletivo | Cache | Anti-lag")
+print("📌 ESP AVANÇADO + DIVERSOS (Anti-Spread, No Clip, Infinite Jump)")
+print("⚡ Hotkeys: F1=AntiSpread | F2=NoClip | F3=InfiniteJump")
