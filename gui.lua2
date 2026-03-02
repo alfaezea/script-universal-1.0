@@ -1,20 +1,22 @@
 --[[
-	AirHub by Exunys © CC0 1.0 Universal (2023)
-	https://github.com/Exunys
-	COM HITBOX EXTERNA - VERSÃO CORRIGIDA
+    ╔═══════════════════════════════════════════════════════════╗
+    ║                 PREMIUM HUB - MODULAR                    ║
+    ║                                                           ║
+    ║  🎯 Aimbot | 👁️ ESP | 🎮 Crosshair | ✈️ Fly | 💪 Hitbox  ║
+    ║                                                           ║
+    ╚═══════════════════════════════════════════════════════════╝
 ]]
 
---// Cache
-local loadstring, getgenv, setclipboard, tablefind, UserInputService = loadstring, getgenv, setclipboard, table.find, game:GetService("UserInputService")
+-- ========== SERVIÇOS ==========
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
---// Loaded check
-if AirHub or AirHubV2Loaded then return end
-
---// Environment
-getgenv().AirHub = {}
-
---// FUNÇÃO SEGURA PARA CARREGAR MÓDULOS
-local function safeLoad(url)
+-- ========== FUNÇÃO SEGURA PARA CARREGAR MÓDULOS ==========
+local function loadModule(url, moduleName)
     local success, result = pcall(function()
         return game:HttpGet(url)
     end)
@@ -23,566 +25,794 @@ local function safeLoad(url)
         local func, err = loadstring(result)
         if func then
             func()
-            print("✅ Módulo carregado: " .. url)
+            print("✅ " .. moduleName .. " carregado com sucesso!")
             return true
         else
-            warn("❌ Erro de sintaxe em: " .. url .. "\n" .. err)
+            warn("❌ Erro no " .. moduleName .. ": " .. err)
             return false
         end
     else
-        warn("❌ Falha ao baixar: " .. url)
+        warn("❌ Falha ao baixar " .. moduleName)
         return false
     end
 end
 
---// 1️⃣ PRIMEIRO: Carregar TODOS os módulos
+-- ========== CARREGAR MÓDULOS EXTERNOS ==========
 print("🔄 Carregando módulos...")
-safeLoad("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Aimbot.lua")
-safeLoad("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Wall%20Hack.lua")
-safeLoad("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua")
 
---// 2️⃣ AGUARDAR MÓDULOS CARREGAREM
+-- Carregar Aimbot
+loadModule("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Aimbot.lua", "Aimbot")
+
+-- Carregar WallHack (ESP)
+loadModule("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Wall%20Hack.lua", "WallHack")
+
+-- Carregar Hitbox
+loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua", "Hitbox")
+
+-- Aguardar carregamento
 task.wait(1)
 
---// 3️⃣ DEPOIS: Pegar as referências dos módulos
-local Aimbot, WallHack = getgenv().AirHub.Aimbot, getgenv().AirHub.WallHack
-local Hitbox = getgenv().LimbExtender -- Hitbox module
+-- ========== OBTER REFERÊNCIAS DOS MÓDULOS ==========
+local Aimbot = getgenv().AirHub and getgenv().AirHub.Aimbot
+local WallHack = getgenv().AirHub and getgenv().AirHub.WallHack
+local Hitbox = getgenv().LimbExtender
 
---// Verificar se carregaram
-print("🔍 Aimbot:", Aimbot ~= nil)
-print("🔍 WallHack:", WallHack ~= nil)
-print("🔍 Hitbox:", Hitbox ~= nil)
+-- ========== VERIFICAR MÓDULOS CARREGADOS ==========
+print("🔍 Aimbot:", Aimbot and "✅" or "❌")
+print("🔍 WallHack:", WallHack and "✅" or "❌")
+print("🔍 Hitbox:", Hitbox and "✅" or "❌")
 
---// 4️⃣ SÓ DEPOIS carregar a biblioteca UI
-local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
+-- ========== CONFIGURAÇÕES DA GUI ==========
+local Settings = {
+    Menu = {
+        Color = Color3.fromRGB(18, 18, 22),
+        Accent = Color3.fromRGB(0, 170, 255),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        Transparency = 0.05,
+    },
+    Hitbox = {
+        Enabled = false,
+        ToggleKey = "L",
+        TargetLimb = "HumanoidRootPart",
+        Size = 15,
+        Transparency = 0.9,
+        CanCollide = false,
+        TeamCheck = true,
+        ForceFieldCheck = true,
+        UseHighlight = true,
+        DepthMode = "AlwaysOnTop",
+        HighlightColor = Color3.fromRGB(255, 117, 24),
+        HighlightTransparency = 0.7,
+        OutlineColor = Color3.fromRGB(0, 0, 0),
+        OutlineTransparency = 1,
+    },
+    Fly = {
+        Enabled = false,
+        Speed = 50,
+    }
+}
 
---// Variables auxiliares
-local Parts, Fonts, TracersType = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}, {"UI", "System", "Plex", "Monospace"}, {"Bottom", "Center", "Mouse"}
+-- ========== INSTANCIAR HITBOX ==========
+local extender
+if Hitbox then
+    extender = Hitbox({
+        TOGGLE = Settings.Hitbox.ToggleKey,
+        TARGET_LIMB = Settings.Hitbox.TargetLimb,
+        LIMB_SIZE = Settings.Hitbox.Size,
+        LIMB_TRANSPARENCY = Settings.Hitbox.Transparency,
+        LIMB_CAN_COLLIDE = Settings.Hitbox.CanCollide,
+        TEAM_CHECK = Settings.Hitbox.TeamCheck,
+        FORCEFIELD_CHECK = Settings.Hitbox.ForceFieldCheck,
+        USE_HIGHLIGHT = Settings.Hitbox.UseHighlight,
+        DEPTH_MODE = Settings.Hitbox.DepthMode,
+        HIGHLIGHT_FILL_COLOR = Settings.Hitbox.HighlightColor,
+        HIGHLIGHT_FILL_TRANSPARENCY = Settings.Hitbox.HighlightTransparency,
+        HIGHLIGHT_OUTLINE_COLOR = Settings.Hitbox.OutlineColor,
+        HIGHLIGHT_OUTLINE_TRANSPARENCY = Settings.Hitbox.OutlineTransparency,
+    })
+end
 
 -- ========== SISTEMA DE FLY ==========
-local Fly = {
-    Enabled = false,
-    Speed = 50,
+local FlySystem = {
     BodyGyro = nil,
     BodyVelocity = nil,
-    Connections = {}
+    Connection = nil,
 }
 
 local function ToggleFly(state)
-    local player = game.Players.LocalPlayer
-    local character = player.Character
+    local character = LocalPlayer.Character
     if not character then return end
-
+    
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     local rootPart = character:FindFirstChild("HumanoidRootPart")
-
+    
     if not humanoid or not rootPart then return end
-
+    
     if state then
         humanoid.PlatformStand = true
-
-        Fly.BodyGyro = Instance.new("BodyGyro")
-        Fly.BodyGyro.P = 9e4
-        Fly.BodyGyro.MaxTorque = Vector3.new(9e4, 9e4, 9e4)
-        Fly.BodyGyro.CFrame = rootPart.CFrame
-        Fly.BodyGyro.Parent = rootPart
-
-        Fly.BodyVelocity = Instance.new("BodyVelocity")
-        Fly.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        Fly.BodyVelocity.MaxForce = Vector3.new(9e4, 9e4, 9e4)
-        Fly.BodyVelocity.Parent = rootPart
-
-        Fly.Connections.RenderStepped = game:GetService("RunService").RenderStepped:Connect(function()
-            if not Fly.Enabled then return end
-
-            local moveDirection = Vector3.new(0, 0, 0)
-            local camera = workspace.CurrentCamera
-
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + camera.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - camera.CFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - camera.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + camera.CFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDirection = moveDirection + Vector3.new(0, 1, 0) end
-            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDirection = moveDirection + Vector3.new(0, -1, 0) end
-
-            if moveDirection.Magnitude > 0 then
-                moveDirection = moveDirection.Unit * Fly.Speed
+        
+        FlySystem.BodyGyro = Instance.new("BodyGyro")
+        FlySystem.BodyGyro.P = 9e4
+        FlySystem.BodyGyro.MaxTorque = Vector3.new(9e4, 9e4, 9e4)
+        FlySystem.BodyGyro.CFrame = rootPart.CFrame
+        FlySystem.BodyGyro.Parent = rootPart
+        
+        FlySystem.BodyVelocity = Instance.new("BodyVelocity")
+        FlySystem.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        FlySystem.BodyVelocity.MaxForce = Vector3.new(9e4, 9e4, 9e4)
+        FlySystem.BodyVelocity.Parent = rootPart
+        
+        FlySystem.Connection = RunService.RenderStepped:Connect(function()
+            if not Settings.Fly.Enabled then return end
+            
+            local move = Vector3.new(0, 0, 0)
+            local cam = workspace.CurrentCamera.CFrame
+            
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cam.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cam.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cam.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cam.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, 1, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0, -1, 0) end
+            
+            if move.Magnitude > 0 then
+                move = move.Unit * Settings.Fly.Speed
             end
-
-            if Fly.BodyVelocity then Fly.BodyVelocity.Velocity = moveDirection end
-            if Fly.BodyGyro then Fly.BodyGyro.CFrame = CFrame.new(rootPart.Position, rootPart.Position + camera.CFrame.LookVector) end
+            
+            FlySystem.BodyVelocity.Velocity = move
+            FlySystem.BodyGyro.CFrame = CFrame.new(rootPart.Position, rootPart.Position + cam.LookVector)
         end)
-
-        Fly.Enabled = true
-        print("✅ Fly ATIVADO")
     else
-        Fly.Enabled = false
-        if Fly.Connections.RenderStepped then Fly.Connections.RenderStepped:Disconnect() end
-        if Fly.BodyGyro then Fly.BodyGyro:Destroy(); Fly.BodyGyro = nil end
-        if Fly.BodyVelocity then Fly.BodyVelocity:Destroy(); Fly.BodyVelocity = nil end
-        if humanoid then humanoid.PlatformStand = false end
-        print("❌ Fly DESATIVADO")
+        humanoid.PlatformStand = false
+        if FlySystem.BodyGyro then FlySystem.BodyGyro:Destroy() end
+        if FlySystem.BodyVelocity then FlySystem.BodyVelocity:Destroy() end
+        if FlySystem.Connection then FlySystem.Connection:Disconnect() end
     end
 end
 
--- ========== CONFIGURAÇÕES DA HITBOX ==========
-local HitboxSettings = {
-    Enabled = false,
-    ToggleKey = "L",
-    TargetLimb = "HumanoidRootPart",
-    Size = 15,
-    Transparency = 0.9,
-    CanCollide = false,
-    TeamCheck = true,
-    ForceFieldCheck = true,
-    UseHighlight = true,
-    DepthMode = "AlwaysOnTop",
-    HighlightColor = Color3.fromRGB(255, 117, 24),
-    HighlightTransparency = 0.7,
-    OutlineColor = Color3.fromRGB(0, 0, 0),
-    OutlineTransparency = 1,
-}
+-- ========== CRIAÇÃO DA GUI ==========
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PremiumHub"
+ScreenGui.Parent = (gethui and gethui()) or LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- ========== INSTANCIAR O EXTENDER (COM VERIFICAÇÃO) ==========
-local extender
-if Hitbox then
-    print("✅ Criando extender com Hitbox")
-    extender = Hitbox({
-        TOGGLE = HitboxSettings.ToggleKey,
-        TARGET_LIMB = HitboxSettings.TargetLimb,
-        LIMB_SIZE = HitboxSettings.Size,
-        LIMB_TRANSPARENCY = HitboxSettings.Transparency,
-        LIMB_CAN_COLLIDE = HitboxSettings.CanCollide,
-        TEAM_CHECK = HitboxSettings.TeamCheck,
-        FORCEFIELD_CHECK = HitboxSettings.ForceFieldCheck,
-        USE_HIGHLIGHT = HitboxSettings.UseHighlight,
-        DEPTH_MODE = HitboxSettings.DepthMode,
-        HIGHLIGHT_FILL_COLOR = HitboxSettings.HighlightColor,
-        HIGHLIGHT_FILL_TRANSPARENCY = HitboxSettings.HighlightTransparency,
-        HIGHLIGHT_OUTLINE_COLOR = HitboxSettings.OutlineColor,
-        HIGHLIGHT_OUTLINE_TRANSPARENCY = HitboxSettings.OutlineTransparency,
-    })
-else
-    print("⚠️ Hitbox não disponível, usando funções dummy")
-    extender = { Start = function() end, Stop = function() end, Set = function() end }
+-- Frame principal com efeito glassmorphism
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 750, 0, 550)
+MainFrame.Position = UDim2.new(0.5, -375, 0.5, -275)
+MainFrame.BackgroundColor3 = Settings.Menu.Color
+MainFrame.BackgroundTransparency = Settings.Menu.Transparency
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+-- Efeito de vidro (blur)
+local Blur = Instance.new("ImageLabel")
+Blur.Size = UDim2.new(1, 0, 1, 0)
+Blur.BackgroundTransparency = 1
+Blur.Image = "rbxassetid://3570695787"
+Blur.ImageColor3 = Color3.fromRGB(255, 255, 255)
+Blur.ImageTransparency = 0.95
+Blur.ScaleType = Enum.ScaleType.Slice
+Blur.SliceCenter = Rect.new(100, 100, 100, 100)
+Blur.Parent = MainFrame
+
+-- Bordas arredondadas
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 20)
+UICorner.Parent = MainFrame
+
+-- Sombra
+local Shadow = Instance.new("ImageLabel")
+Shadow.Size = UDim2.new(1, 30, 1, 30)
+Shadow.Position = UDim2.new(0, -15, 0, -15)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxassetid://1316045217"
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ImageTransparency = 0.7
+Shadow.ScaleType = Enum.ScaleType.Slice
+Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+Shadow.Parent = MainFrame
+
+-- Barra de título com gradiente
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 60)
+TitleBar.BackgroundColor3 = Settings.Menu.Accent
+TitleBar.BackgroundTransparency = 0.2
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 20)
+TitleCorner.Parent = TitleBar
+
+-- Ícone
+local Icon = Instance.new("ImageLabel")
+Icon.Size = UDim2.new(0, 40, 0, 40)
+Icon.Position = UDim2.new(0, 15, 0.5, -20)
+Icon.BackgroundTransparency = 1
+Icon.Image = "rbxassetid://6023426595"
+Icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+Icon.Parent = TitleBar
+
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0, 300, 1, 0)
+Title.Position = UDim2.new(0, 65, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "PREMIUM HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 24
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Font = Enum.Font.GothamBold
+Title.Parent = TitleBar
+
+-- Subtítulo
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(0, 300, 0, 20)
+SubTitle.Position = UDim2.new(0, 65, 0.5, 5)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = "by DeepSeek • Ultimate Edition"
+SubTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
+SubTitle.TextSize = 12
+SubTitle.TextXAlignment = Enum.TextXAlignment.Left
+SubTitle.Font = Enum.Font.Gotham
+SubTitle.Parent = TitleBar
+
+-- Status dos módulos
+local ModuleStatus = Instance.new("Frame")
+ModuleStatus.Size = UDim2.new(0, 200, 1, 0)
+ModuleStatus.Position = UDim2.new(1, -210, 0, 0)
+ModuleStatus.BackgroundTransparency = 1
+ModuleStatus.Parent = TitleBar
+
+local function createStatusIndicator(name, color, y)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 20)
+    frame.Position = UDim2.new(0, 0, 0, y)
+    frame.BackgroundTransparency = 1
+    frame.Parent = ModuleStatus
+    
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.new(0, 10, 0, 10)
+    dot.Position = UDim2.new(0, 0, 0.5, -5)
+    dot.BackgroundColor3 = color
+    dot.BorderSizePixel = 0
+    dot.Parent = frame
+    
+    local dotCorner = Instance.new("UICorner")
+    dotCorner.CornerRadius = UDim.new(1, 0)
+    dotCorner.Parent = dot
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -15, 1, 0)
+    label.Position = UDim2.new(0, 15, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
 end
 
---// Frame
-Library.UnloadCallback = function()
-    ToggleFly(false)
-    if Aimbot and Aimbot.Functions then Aimbot.Functions:Exit() end
-    if WallHack and WallHack.Functions then WallHack.Functions:Exit() end
-    getgenv().AirHub = nil
+createStatusIndicator("Aimbot", Aimbot and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 0)
+createStatusIndicator("ESP", WallHack and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 20)
+createStatusIndicator("Hitbox", Hitbox and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 40)
+
+-- Botão Fechar
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 40, 0, 40)
+CloseBtn.Position = UDim2.new(1, -50, 0, 10)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 20
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TitleBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 10)
+CloseCorner.Parent = CloseBtn
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+    if FlySystem.Connection then FlySystem.Connection:Disconnect() end
+end)
+
+-- Container de Abas
+local TabContainer = Instance.new("Frame")
+TabContainer.Size = UDim2.new(1, 0, 0, 50)
+TabContainer.Position = UDim2.new(0, 0, 0, 70)
+TabContainer.BackgroundTransparency = 1
+TabContainer.Parent = MainFrame
+
+-- Container de Conteúdo
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Size = UDim2.new(1, -40, 1, -140)
+ContentContainer.Position = UDim2.new(0, 20, 0, 130)
+ContentContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+ContentContainer.BackgroundTransparency = 0.3
+ContentContainer.BorderSizePixel = 0
+ContentContainer.Parent = MainFrame
+
+local ContentCorner = Instance.new("UICorner")
+ContentCorner.CornerRadius = UDim.new(0, 15)
+ContentCorner.Parent = ContentContainer
+
+-- ========== SISTEMA DE ABAS ==========
+local Tabs = {}
+local CurrentTab = "Aimbot"
+local TabButtons = {}
+
+local function createTab(name, icon, position)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 120, 1, 0)
+    btn.Position = UDim2.new(0, position, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    btn.BackgroundTransparency = 0.5
+    btn.BorderSizePixel = 0
+    btn.Text = icon .. "  " .. name
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = TabContainer
+    
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 10)
+    btnCorner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        CurrentTab = name
+        for _, b in ipairs(TabButtons) do
+            b.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+            b.BackgroundTransparency = 0.5
+            b.TextColor3 = Color3.fromRGB(200, 200, 200)
+        end
+        btn.BackgroundColor3 = Settings.Menu.Accent
+        btn.BackgroundTransparency = 0.2
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        UpdateContent(name)
+    end)
+    
+    table.insert(TabButtons, btn)
+    Tabs[name] = btn
 end
 
---// CRIAR JANELA PRINCIPAL
-local MainFrame = Library:CreateWindow({
-	Name = "AirHub",
-	Themeable = {
-		Image = "7059346386",
-		Info = "Made by Exunys\nPowered by Pepsi's UI Library",
-		Credit = false
-	},
-	Background = "",
-	Theme = [[{"__Designer.Colors.topGradient":"3F0C64","__Designer.Colors.section":"C259FB","__Designer.Colors.hoveredOptionBottom":"4819B4","__Designer.Background.ImageAssetID":"rbxassetid://4427304036","__Designer.Colors.selectedOption":"4E149C","__Designer.Colors.unselectedOption":"482271","__Designer.Files.WorkspaceFile":"AirHub","__Designer.Colors.unhoveredOptionTop":"310269","__Designer.Colors.outerBorder":"391D57","__Designer.Background.ImageColor":"69009C","__Designer.Colors.tabText":"B9B9B9","__Designer.Colors.elementBorder":"160B24","__Designer.Background.ImageTransparency":100,"__Designer.Colors.background":"1E1237","__Designer.Colors.innerBorder":"531E79","__Designer.Colors.bottomGradient":"361A60","__Designer.Colors.sectionBackground":"21002C","__Designer.Colors.hoveredOptionTop":"6B10F9","__Designer.Colors.otherElementText":"7B44A8","__Designer.Colors.main":"AB26FF","__Designer.Colors.elementText":"9F7DB5","__Designer.Colors.unhoveredOptionBottom":"3E0088","__Designer.Background.UseBackgroundImage":false}]]
-})
+-- Criar abas
+createTab("Aimbot", "🎯", 0)
+createTab("ESP", "👁️", 130)
+createTab("Crosshair", "🎮", 260)
+createTab("Fly", "✈️", 390)
+createTab("Hitbox", "💪", 520)
 
---// Tabs
-local AimbotTab = MainFrame:CreateTab({ Name = "Aimbot" })
-local VisualsTab = MainFrame:CreateTab({ Name = "Visuals" })
-local CrosshairTab = MainFrame:CreateTab({ Name = "Crosshair" })
-local MiscTab = MainFrame:CreateTab({ Name = "Diversos" })
-local FunctionsTab = MainFrame:CreateTab({ Name = "Functions" })
+-- Ativar primeira aba
+Tabs["Aimbot"].BackgroundColor3 = Settings.Menu.Accent
+Tabs["Aimbot"].BackgroundTransparency = 0.2
+Tabs["Aimbot"].TextColor3 = Color3.fromRGB(255, 255, 255)
 
---// Aimbot Sections
-local Values = AimbotTab:CreateSection({ Name = "Values" })
-local Checks = AimbotTab:CreateSection({ Name = "Checks" })
-local ThirdPerson = AimbotTab:CreateSection({ Name = "Third Person" })
-local FOV_Values = AimbotTab:CreateSection({ Name = "Field Of View", Side = "Right" })
-local FOV_Appearance = AimbotTab:CreateSection({ Name = "FOV Circle Appearance", Side = "Right" })
-
---// Visuals Sections
-local WallHackChecks = VisualsTab:CreateSection({ Name = "Checks" })
-local ESPSettings = VisualsTab:CreateSection({ Name = "ESP Settings" })
-local BoxesSettings = VisualsTab:CreateSection({ Name = "Boxes Settings" })
-local ChamsSettings = VisualsTab:CreateSection({ Name = "Chams Settings" })
-local TracersSettings = VisualsTab:CreateSection({ Name = "Tracers Settings", Side = "Right" })
-local HeadDotsSettings = VisualsTab:CreateSection({ Name = "Head Dots Settings", Side = "Right" })
-local HealthBarSettings = VisualsTab:CreateSection({ Name = "Health Bar Settings", Side = "Right" })
-
---// Crosshair Sections
-local CrosshairSettings = CrosshairTab:CreateSection({ Name = "Settings" })
-local CrosshairSettings_CenterDot = CrosshairTab:CreateSection({ Name = "Center Dot Settings", Side = "Right" })
-
---// Diversos Sections
-local FlySection = MiscTab:CreateSection({ Name = "Sistema de Voo" })
-local HitboxSection = MiscTab:CreateSection({ Name = "Hitbox Extender", Side = "Right" })
-local HitboxConfig = MiscTab:CreateSection({ Name = "Configurações da Hitbox", Side = "Right" })
-local HitboxHighlight = MiscTab:CreateSection({ Name = "Configurações do Highlight", Side = "Right" })
-
---// Functions Sections
-local FunctionsSection = FunctionsTab:CreateSection({ Name = "Functions" })
-
--- ========== AIMBOT (com verificações) ==========
-if Aimbot then
-    Values:AddToggle({
-        Name = "Enabled",
-        Value = Aimbot.Settings.Enabled,
-        Callback = function(New) Aimbot.Settings.Enabled = New end
-    }).Default = Aimbot.Settings.Enabled
-
-    Values:AddToggle({
-        Name = "Toggle",
-        Value = Aimbot.Settings.Toggle,
-        Callback = function(New) Aimbot.Settings.Toggle = New end
-    }).Default = Aimbot.Settings.Toggle
-
-    Aimbot.Settings.LockPart = Parts[1]; 
-    Values:AddDropdown({
-        Name = "Lock Part",
-        Value = Parts[1],
-        Callback = function(New) Aimbot.Settings.LockPart = New end,
-        List = Parts,
-        Nothing = "Head"
-    }).Default = Parts[1]
-
-    Values:AddTextbox({
-        Name = "Hotkey",
-        Value = Aimbot.Settings.TriggerKey,
-        Callback = function(New) Aimbot.Settings.TriggerKey = New end
-    }).Default = Aimbot.Settings.TriggerKey
-
-    Values:AddSlider({
-        Name = "Sensitivity",
-        Value = Aimbot.Settings.Sensitivity,
-        Callback = function(New) Aimbot.Settings.Sensitivity = New end,
-        Min = 0, Max = 1, Decimals = 2
-    }).Default = Aimbot.Settings.Sensitivity
-
-    Checks:AddToggle({
-        Name = "Team Check",
-        Value = Aimbot.Settings.TeamCheck,
-        Callback = function(New) Aimbot.Settings.TeamCheck = New end
-    }).Default = Aimbot.Settings.TeamCheck
-
-    Checks:AddToggle({
-        Name = "Wall Check",
-        Value = Aimbot.Settings.WallCheck,
-        Callback = function(New) Aimbot.Settings.WallCheck = New end
-    }).Default = Aimbot.Settings.WallCheck
-
-    Checks:AddToggle({
-        Name = "Alive Check",
-        Value = Aimbot.Settings.AliveCheck,
-        Callback = function(New) Aimbot.Settings.AliveCheck = New end
-    }).Default = Aimbot.Settings.AliveCheck
-
-    ThirdPerson:AddToggle({
-        Name = "Enable Third Person",
-        Value = Aimbot.Settings.ThirdPerson,
-        Callback = function(New) Aimbot.Settings.ThirdPerson = New end
-    }).Default = Aimbot.Settings.ThirdPerson
-
-    ThirdPerson:AddSlider({
-        Name = "Sensitivity",
-        Value = Aimbot.Settings.ThirdPersonSensitivity,
-        Callback = function(New) Aimbot.Settings.ThirdPersonSensitivity = New end,
-        Min = 0.1, Max = 5, Decimals = 1
-    }).Default = Aimbot.Settings.ThirdPersonSensitivity
-
-    FOV_Values:AddToggle({
-        Name = "Enabled",
-        Value = Aimbot.FOVSettings.Enabled,
-        Callback = function(New) Aimbot.FOVSettings.Enabled = New end
-    }).Default = Aimbot.FOVSettings.Enabled
-
-    FOV_Values:AddToggle({
-        Name = "Visible",
-        Value = Aimbot.FOVSettings.Visible,
-        Callback = function(New) Aimbot.FOVSettings.Visible = New end
-    }).Default = Aimbot.FOVSettings.Visible
-
-    FOV_Values:AddSlider({
-        Name = "Amount",
-        Value = Aimbot.FOVSettings.Amount,
-        Callback = function(New) Aimbot.FOVSettings.Amount = New end,
-        Min = 10, Max = 300
-    }).Default = Aimbot.FOVSettings.Amount
-
-    FOV_Appearance:AddToggle({
-        Name = "Filled",
-        Value = Aimbot.FOVSettings.Filled,
-        Callback = function(New) Aimbot.FOVSettings.Filled = New end
-    }).Default = Aimbot.FOVSettings.Filled
-
-    FOV_Appearance:AddSlider({
-        Name = "Transparency",
-        Value = Aimbot.FOVSettings.Transparency,
-        Callback = function(New) Aimbot.FOVSettings.Transparency = New end,
-        Min = 0, Max = 1, Decimal = 1
-    }).Default = Aimbot.FOVSettings.Transparency
-
-    FOV_Appearance:AddSlider({
-        Name = "Sides",
-        Value = Aimbot.FOVSettings.Sides,
-        Callback = function(New) Aimbot.FOVSettings.Sides = New end,
-        Min = 3, Max = 60
-    }).Default = Aimbot.FOVSettings.Sides
-
-    FOV_Appearance:AddSlider({
-        Name = "Thickness",
-        Value = Aimbot.FOVSettings.Thickness,
-        Callback = function(New) Aimbot.FOVSettings.Thickness = New end,
-        Min = 1, Max = 50
-    }).Default = Aimbot.FOVSettings.Thickness
-
-    FOV_Appearance:AddColorpicker({
-        Name = "Color",
-        Value = Aimbot.FOVSettings.Color,
-        Callback = function(New) Aimbot.FOVSettings.Color = New end
-    }).Default = Aimbot.FOVSettings.Color
-
-    FOV_Appearance:AddColorpicker({
-        Name = "Locked Color",
-        Value = Aimbot.FOVSettings.LockedColor,
-        Callback = function(New) Aimbot.FOVSettings.LockedColor = New end
-    }).Default = Aimbot.FOVSettings.LockedColor
-else
-    Values:AddLabel("❌ Aimbot não carregado")
+-- ========== FUNÇÕES DE CRIAÇÃO DE ELEMENTOS ==========
+local function CreateSection(parent, title, y)
+    local section = Instance.new("TextLabel")
+    section.Size = UDim2.new(1, -20, 0, 30)
+    section.Position = UDim2.new(0, 10, 0, y)
+    section.BackgroundTransparency = 1
+    section.Text = "⚡ " .. title
+    section.TextColor3 = Settings.Menu.Accent
+    section.TextSize = 18
+    section.TextXAlignment = Enum.TextXAlignment.Left
+    section.Font = Enum.Font.GothamBold
+    section.Parent = parent
+    return y + 35
 end
 
--- ========== WALLHACK (com verificações) ==========
-if WallHack then
-    WallHackChecks:AddToggle({
-        Name = "Enabled",
-        Value = WallHack.Settings.Enabled,
-        Callback = function(New) WallHack.Settings.Enabled = New end
-    }).Default = WallHack.Settings.Enabled
-
-    WallHackChecks:AddToggle({
-        Name = "Team Check",
-        Value = WallHack.Settings.TeamCheck,
-        Callback = function(New) WallHack.Settings.TeamCheck = New end
-    }).Default = WallHack.Settings.TeamCheck
-
-    WallHackChecks:AddToggle({
-        Name = "Alive Check",
-        Value = WallHack.Settings.AliveCheck,
-        Callback = function(New) WallHack.Settings.AliveCheck = New end
-    }).Default = WallHack.Settings.AliveCheck
-
-    -- Continuar com todas as configurações do WallHack...
-    -- (mantenha todo o código do WallHack que você já tinha)
-else
-    WallHackChecks:AddLabel("❌ WallHack não carregado")
+local function CreateToggle(parent, x, y, text, callback, default)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 35)
+    frame.Position = UDim2.new(0, x, 0, y)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 200, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Settings.Menu.TextColor
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
+    
+    local toggle = Instance.new("TextButton")
+    toggle.Size = UDim2.new(0, 60, 0, 25)
+    toggle.Position = UDim2.new(0, 210, 0.5, -12.5)
+    toggle.BackgroundColor3 = default and Settings.Menu.Accent or Color3.fromRGB(60, 60, 70)
+    toggle.BorderSizePixel = 0
+    toggle.Text = default and "ON" or "OFF"
+    toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggle.TextSize = 12
+    toggle.Font = Enum.Font.GothamBold
+    toggle.Parent = frame
+    
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(0, 6)
+    toggleCorner.Parent = toggle
+    
+    local state = default
+    toggle.MouseButton1Click:Connect(function()
+        state = not state
+        toggle.BackgroundColor3 = state and Settings.Menu.Accent or Color3.fromRGB(60, 60, 70)
+        toggle.Text = state and "ON" or "OFF"
+        callback(state)
+    end)
+    
+    return frame
 end
 
--- ========== CROSSHAIR (com verificações) ==========
-if WallHack and WallHack.Crosshair then
-    CrosshairSettings:AddToggle({
-        Name = "Mouse Cursor",
-        Value = UserInputService.MouseIconEnabled,
-        Callback = function(New) UserInputService.MouseIconEnabled = New end
-    }).Default = UserInputService.MouseIconEnabled
-
-    CrosshairSettings:AddToggle({
-        Name = "Enabled",
-        Value = WallHack.Crosshair.Settings.Enabled,
-        Callback = function(New) WallHack.Crosshair.Settings.Enabled = New end
-    }).Default = WallHack.Crosshair.Settings.Enabled
-
-    -- Continuar com todas as configurações do Crosshair...
-else
-    CrosshairSettings:AddLabel("❌ Crosshair não disponível")
+local function CreateSlider(parent, x, y, text, min, max, default, callback, suffix)
+    suffix = suffix or ""
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 50)
+    frame.Position = UDim2.new(0, x, 0, y)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 200, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Settings.Menu.TextColor
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
+    
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(0, 70, 0, 20)
+    valueLabel.Position = UDim2.new(0, 210, 0, 0)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = tostring(default) .. suffix
+    valueLabel.TextColor3 = Settings.Menu.Accent
+    valueLabel.TextSize = 14
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.Parent = frame
+    
+    local slider = Instance.new("Frame")
+    slider.Size = UDim2.new(1, 0, 0, 20)
+    slider.Position = UDim2.new(0, 0, 0, 25)
+    slider.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    slider.BorderSizePixel = 0
+    slider.Parent = frame
+    
+    local sliderCorner = Instance.new("UICorner")
+    sliderCorner.CornerRadius = UDim.new(0, 6)
+    sliderCorner.Parent = slider
+    
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = Settings.Menu.Accent
+    fill.BorderSizePixel = 0
+    fill.Parent = slider
+    
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(0, 6)
+    fillCorner.Parent = fill
+    
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 1, 0)
+    button.BackgroundTransparency = 1
+    button.Text = ""
+    button.Parent = slider
+    
+    local dragging = false
+    local currentValue = default
+    
+    button.MouseButton1Down:Connect(function()
+        dragging = true
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    
+    RunService.RenderStepped:Connect(function()
+        if dragging then
+            local mousePos = UserInputService:GetMouseLocation().X
+            local sliderPos = slider.AbsolutePosition.X
+            local sliderSize = slider.AbsoluteSize.X
+            local relative = math.clamp(mousePos - sliderPos, 0, sliderSize)
+            local value = min + (relative / sliderSize) * (max - min)
+            value = math.floor(value * 10) / 10
+            
+            fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
+            valueLabel.Text = tostring(value) .. suffix
+            currentValue = value
+            callback(value)
+        end
+    end)
 end
 
--- ========== FLY ==========
-FlySection:AddToggle({
-    Name = "Ativar Fly",
-    Value = Fly.Enabled,
-    Callback = function(New) ToggleFly(New) end
-})
-
-FlySection:AddSlider({
-    Name = "Velocidade",
-    Value = Fly.Speed,
-    Callback = function(New) Fly.Speed = New end,
-    Min = 10, Max = 200, Decimals = 0
-})
-
-FlySection:AddLabel("Controles:")
-FlySection:AddLabel("WASD - Andar")
-FlySection:AddLabel("Espaço - Subir")
-FlySection:AddLabel("Shift - Descer")
-
--- ========== HITBOX ==========
-if extender then
-    HitboxSection:AddToggle({
-        Name = "Ativar Hitbox",
-        Value = HitboxSettings.Enabled,
-        Callback = function(New)
-            HitboxSettings.Enabled = New
-            if New then extender:Start() else extender:Stop() end
-        end
-    })
-
-    HitboxSection:AddDropdown({
-        Name = "Parte do Corpo",
-        Value = HitboxSettings.TargetLimb,
-        Callback = function(New)
-            HitboxSettings.TargetLimb = New
-            extender:Set("TARGET_LIMB", New)
-        end,
-        List = {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso"},
-        Nothing = "HumanoidRootPart"
-    })
-
-    HitboxSection:AddDropdown({
-        Name = "Tecla Atalho",
-        Value = HitboxSettings.ToggleKey,
-        Callback = function(New)
-            HitboxSettings.ToggleKey = New
-            extender:Set("TOGGLE", New)
-        end,
-        List = {"L", "K", "J", "H", "G", "F", "E", "Q"},
-        Nothing = "L"
-    })
-
-    HitboxConfig:AddSlider({
-        Name = "Tamanho",
-        Value = HitboxSettings.Size,
-        Callback = function(New)
-            HitboxSettings.Size = New
-            extender:Set("LIMB_SIZE", New)
-        end,
-        Min = 5, Max = 30, Decimals = 1
-    })
-
-    HitboxConfig:AddSlider({
-        Name = "Transparência",
-        Value = HitboxSettings.Transparency,
-        Callback = function(New)
-            HitboxSettings.Transparency = New
-            extender:Set("LIMB_TRANSPARENCY", New)
-        end,
-        Min = 0, Max = 1, Decimals = 2
-    })
-
-    HitboxConfig:AddToggle({
-        Name = "Pode Colidir",
-        Value = HitboxSettings.CanCollide,
-        Callback = function(New)
-            HitboxSettings.CanCollide = New
-            extender:Set("LIMB_CAN_COLLIDE", New)
-        end
-    })
-
-    HitboxConfig:AddToggle({
-        Name = "Team Check",
-        Value = HitboxSettings.TeamCheck,
-        Callback = function(New)
-            HitboxSettings.TeamCheck = New
-            extender:Set("TEAM_CHECK", New)
-        end
-    })
-
-    HitboxConfig:AddToggle({
-        Name = "ForceField Check",
-        Value = HitboxSettings.ForceFieldCheck,
-        Callback = function(New)
-            HitboxSettings.ForceFieldCheck = New
-            extender:Set("FORCEFIELD_CHECK", New)
-        end
-    })
-
-    HitboxHighlight:AddToggle({
-        Name = "Usar Highlight",
-        Value = HitboxSettings.UseHighlight,
-        Callback = function(New)
-            HitboxSettings.UseHighlight = New
-            extender:Set("USE_HIGHLIGHT", New)
-        end
-    })
-
-    HitboxHighlight:AddDropdown({
-        Name = "Modo Profundidade",
-        Value = HitboxSettings.DepthMode,
-        Callback = function(New)
-            HitboxSettings.DepthMode = New
-            extender:Set("DEPTH_MODE", New)
-        end,
-        List = {"AlwaysOnTop", "Occluded", "AlwaysOnBottom"},
-        Nothing = "AlwaysOnTop"
-    })
-
-    HitboxHighlight:AddColorpicker({
-        Name = "Cor do Fill",
-        Value = HitboxSettings.HighlightColor,
-        Callback = function(New)
-            HitboxSettings.HighlightColor = New
-            extender:Set("HIGHLIGHT_FILL_COLOR", New)
-        end
-    })
-
-    HitboxHighlight:AddSlider({
-        Name = "Transparência Fill",
-        Value = HitboxSettings.HighlightTransparency,
-        Callback = function(New)
-            HitboxSettings.HighlightTransparency = New
-            extender:Set("HIGHLIGHT_FILL_TRANSPARENCY", New)
-        end,
-        Min = 0, Max = 1, Decimals = 2
-    })
-
-    HitboxHighlight:AddColorpicker({
-        Name = "Cor do Outline",
-        Value = HitboxSettings.OutlineColor,
-        Callback = function(New)
-            HitboxSettings.OutlineColor = New
-            extender:Set("HIGHLIGHT_OUTLINE_COLOR", New)
-        end
-    })
-
-    HitboxHighlight:AddSlider({
-        Name = "Transparência Outline",
-        Value = HitboxSettings.OutlineTransparency,
-        Callback = function(New)
-            HitboxSettings.OutlineTransparency = New
-            extender:Set("HIGHLIGHT_OUTLINE_TRANSPARENCY", New)
-        end,
-        Min = 0, Max = 1, Decimals = 2
-    })
-else
-    HitboxSection:AddLabel("❌ Hitbox não carregado")
-end
-
--- ========== FUNCTIONS ==========
-FunctionsSection:AddButton({
-    Name = "Reset Settings",
-    Callback = function()
-        if Aimbot and Aimbot.Functions then Aimbot.Functions:ResetSettings() end
-        if WallHack and WallHack.Functions then WallHack.Functions:ResetSettings() end
-        Library.ResetAll()
+local function CreateDropdown(parent, x, y, text, options, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 45)
+    frame.Position = UDim2.new(0, x, 0, y)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 200, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Settings.Menu.TextColor
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
+    
+    local dropdown = Instance.new("TextButton")
+    dropdown.Size = UDim2.new(0, 120, 0, 25)
+    dropdown.Position = UDim2.new(0, 160, 0, 0)
+    dropdown.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    dropdown.BorderSizePixel = 0
+    dropdown.Text = default
+    dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+    dropdown.TextSize = 12
+    dropdown.Font = Enum.Font.Gotham
+    dropdown.Parent = frame
+    
+    local dropdownCorner = Instance.new("UICorner")
+    dropdownCorner.CornerRadius = UDim.new(0, 6)
+    dropdownCorner.Parent = dropdown
+    
+    local menu = Instance.new("Frame")
+    menu.Size = UDim2.new(0, 120, 0, #options * 25)
+    menu.Position = UDim2.new(0, 160, 0, 25)
+    menu.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    menu.BorderSizePixel = 0
+    menu.Visible = false
+    menu.Parent = frame
+    
+    local menuCorner = Instance.new("UICorner")
+    menuCorner.CornerRadius = UDim.new(0, 6)
+    menuCorner.Parent = menu
+    
+    for i, opt in ipairs(options) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 25)
+        btn.Position = UDim2.new(0, 0, 0, (i-1)*25)
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        btn.BorderSizePixel = 0
+        btn.Text = opt
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextSize = 12
+        btn.Font = Enum.Font.Gotham
+        btn.Parent = menu
+        
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 4)
+        btnCorner.Parent = btn
+        
+        btn.MouseButton1Click:Connect(function()
+            dropdown.Text = opt
+            menu.Visible = false
+            callback(opt)
+        end)
     end
-})
+    
+    dropdown.MouseButton1Click:Connect(function()
+        menu.Visible = not menu.Visible
+    end)
+end
 
-FunctionsSection:AddButton({
-    Name = "Restart",
-    Callback = function()
-        if Aimbot and Aimbot.Functions then Aimbot.Functions:Restart() end
-        if WallHack and WallHack.Functions then WallHack.Functions:Restart() end
+local function CreateColorPicker(parent, x, y, text, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 35)
+    frame.Position = UDim2.new(0, x, 0, y)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0, 200, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Settings.Menu.TextColor
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.Parent = frame
+    
+    local colorBtn = Instance.new("TextButton")
+    colorBtn.Size = UDim2.new(0, 40, 0, 25)
+    colorBtn.Position = UDim2.new(0, 220, 0.5, -12.5)
+    colorBtn.BackgroundColor3 = default
+    colorBtn.BorderSizePixel = 0
+    colorBtn.Text = ""
+    colorBtn.Parent = frame
+    
+    local colorCorner = Instance.new("UICorner")
+    colorCorner.CornerRadius = UDim.new(0, 6)
+    colorCorner.Parent = colorBtn
+    
+    local colors = {
+        Color3.fromRGB(255, 100, 100),
+        Color3.fromRGB(100, 255, 100),
+        Color3.fromRGB(100, 100, 255),
+        Color3.fromRGB(255, 255, 100),
+        Color3.fromRGB(255, 100, 255),
+        Color3.fromRGB(100, 255, 255),
+        Color3.fromRGB(255, 255, 255),
+        Settings.Menu.Accent,
+    }
+    
+    local index = 1
+    colorBtn.MouseButton1Click:Connect(function()
+        index = index % #colors + 1
+        colorBtn.BackgroundColor3 = colors[index]
+        callback(colors[index])
+    end)
+end
+
+-- ========== ATUALIZAR CONTEÚDO DAS ABAS ==========
+function UpdateContent(tab)
+    for _, child in ipairs(ContentContainer:GetChildren()) do
+        child:Destroy()
     end
-})
+    
+    local y = 20
+    
+    if tab == "Aimbot" and Aimbot then
+        y = CreateSection(ContentContainer, "CONFIGURAÇÕES DO AIMBOT", y)
+        
+        CreateToggle(ContentContainer, 10, y, "Ativar Aimbot", function(v) Aimbot.Settings.Enabled = v end, Aimbot.Settings.Enabled)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Team Check", function(v) Aimbot.Settings.TeamCheck = v end, Aimbot.Settings.TeamCheck)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Wall Check", function(v) Aimbot.Settings.WallCheck = v end, Aimbot.Settings.WallCheck)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Alive Check", function(v) Aimbot.Settings.AliveCheck = v end, Aimbot.Settings.AliveCheck)
+        y = y + 40
+        
+        CreateDropdown(ContentContainer, 10, y, "Parte do Corpo", 
+            {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso"}, 
+            Aimbot.Settings.LockPart, 
+            function(v) Aimbot.Settings.LockPart = v end)
+        y = y + 50
+        
+        CreateSlider(ContentContainer, 10, y, "Suavidade", 0.1, 1, Aimbot.Settings.Smoothness, function(v) Aimbot.Settings.Smoothness = v end, "")
+        y = y + 55
+        CreateSlider(ContentContainer, 10, y, "FOV", 30, 360, Aimbot.FOVSettings.Amount, function(v) Aimbot.FOVSettings.Amount = v end, "°")
+        y = y + 55
+        
+    elseif tab == "ESP" and WallHack then
+        y = CreateSection(ContentContainer, "CONFIGURAÇÕES DO ESP", y)
+        
+        CreateToggle(ContentContainer, 10, y, "Ativar ESP", function(v) WallHack.Settings.Enabled = v end, WallHack.Settings.Enabled)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Team Check", function(v) WallHack.Settings.TeamCheck = v end, WallHack.Settings.TeamCheck)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Alive Check", function(v) WallHack.Settings.AliveCheck = v end, WallHack.Settings.AliveCheck)
+        y = y + 40
+        
+        CreateSection(ContentContainer, "ELEMENTOS VISUAIS", y)
+        y = y + 35
+        
+        CreateToggle(ContentContainer, 10, y, "Mostrar Caixas", function(v) WallHack.Visuals.BoxSettings.Enabled = v end, WallHack.Visuals.BoxSettings.Enabled)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Mostrar Nomes", function(v) WallHack.Visuals.ESPSettings.DisplayName = v end, WallHack.Visuals.ESPSettings.DisplayName)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Mostrar Distância", function(v) WallHack.Visuals.ESPSettings.DisplayDistance = v end, WallHack.Visuals.ESPSettings.DisplayDistance)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Mostrar Vida", function(v) WallHack.Visuals.ESPSettings.DisplayHealth = v end, WallHack.Visuals.ESPSettings.DisplayHealth)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Mostrar Tracers", function(v) WallHack.Visuals.TracersSettings.Enabled = v end, WallHack.Visuals.TracersSettings.Enabled)
+        y = y + 40
+        
+    elseif tab == "Crosshair" and WallHack and WallHack.Crosshair then
+        y = CreateSection(ContentContainer, "CONFIGURAÇÕES DO CROSSHAIR", y)
+        
+        CreateToggle(ContentContainer, 10, y, "Ativar Crosshair", function(v) WallHack.Crosshair.Settings.Enabled = v end, WallHack.Crosshair.Settings.Enabled)
+        y = y + 40
+        CreateToggle(ContentContainer, 10, y, "Ponto Central", function(v) WallHack.Crosshair.Settings.CenterDot = v end, WallHack.Crosshair.Settings.CenterDot)
+        y = y + 40
+        
+        CreateDropdown(ContentContainer, 10, y, "Posição", {"Mouse", "Center"}, 
+            WallHack.Crosshair.Settings.Type == 1 and "Mouse" or "Center", 
+            function(v) WallHack.Crosshair.Settings.Type = v == "Mouse" and 1 or 2 end)
+        y = y + 50
+        
+        CreateSlider(ContentContainer, 10, y, "Tamanho", 8, 24, WallHack.Crosshair.Settings.Size, function(v) WallHack.Crosshair.Settings.Size = v end, "")
+        y = y + 55
+        CreateSlider(ContentContainer, 10, y, "Espessura", 1, 5, WallHack.Crosshair.Settings.Thickness, function(v) WallHack.Crosshair.Settings.Thickness = v end, "")
+        y = y + 55
+        CreateSlider(ContentContainer, 10, y, "Gap", 0, 20, WallHack.Crosshair.Settings.GapSize, function(v) WallHack.Crosshair.Settings.GapSize = v end, "")
+        y = y + 55
+        CreateSlider(ContentContainer, 10, y, "Rotação", -180, 180, WallHack.Crosshair.Settings.Rotation, function(v) WallHack.Crosshair.Settings.Rotation = v end, "°")
+        y = y + 55
+        
+    elseif tab == "Fly" then
+        y = CreateSection(ContentContainer, "SISTEMA DE VOO", y)
+        
+        CreateToggle(ContentContainer, 10, y, "Ativar Fly", function(v) Settings.Fly.Enabled = v; ToggleFly(v) end, Settings.Fly.Enabled)
+        y = y + 40
+        CreateSlider(ContentContainer, 10, y, "Velocidade", 10, 200, Settings.Fly.Speed, function(v) Settings.Fly.Speed = v end, "")
+        y = y + 55
+        
+        local controls = Instance.new("TextLabel")
+        controls.Size = UDim2.new(1, -20, 0, 80)
+        controls.Position = UDim2.new(0, 10, 0, y)
+        controls.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        controls.BackgroundTransparency = 0.5
+        controls.BorderSizePixel = 0
+        controls.Text = "🎮 CONTROLES:\n\nWASD  -  Movimento\nEspaço  -  Subir\nShift  -  Descer"
+        controls.TextColor3 = Settings.Menu.TextColor
+        controls.TextSize = 14
+        controls.Font = Enum.Font.Gotham
+        controls.TextWrapped = true
+        controls.Parent = ContentContainer
+        
+        local controlsCorner = Instance.new("UICorner")
+        controlsCorner.CornerRadius = UDim.new(0, 10)
+        controlsCorner.Parent = controls
+        
+    elseif tab == "Hitbox" and extender then
+        y = CreateSection(ContentContainer, "HITBOX EXTENDER", y)
+        
+        CreateToggle(ContentContainer, 10, y, "Ativar Hitbox", function(v) 
+            Settings.Hitbox.Enabled = v
+            if v then extender:Start() else extender:Stop() end
+        end, Settings.Hitbox.Enabled)
+        y = y + 40
+        
+        CreateDropdown(ContentContainer, 10, y, "Parte do Corpo", 
+            {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso"}, 
+            Settings.Hitbox.TargetLimb, 
+            function(v) Settings.Hitbox.TargetLimb = v; extender:Set("TARGET_LIMB", v) end)
+        y = y + 50
+        
+        CreateDropdown(ContentContainer, 10, y, "Tecla Atalho", 
+            {"L", "K", "J", "H", "G", "F", "E", "Q"}, 
+            Settings.Hitbox.ToggleKey, 
+            function(v) Settings.Hitbox.ToggleKey = v; extender:Set("TOGGLE", v) end)
+        y = y + 50
+        
+        CreateSlider(ContentContainer, 10, y, "Tamanho", 5, 30, Settings.Hitbox.Size, function(v) Settings.Hitbox.Size = v; extender:Set("LIMB_SIZE", v) end, "")
+        y = y + 55
+        CreateSlider(ContentContainer, 10, y, "Transparência", 0, 1, Settings.Hitbox.Transparency, function(v) Settings.Hitbox.Transparency = v; extender:Set("LIMB_TRANSPARENCY", v) end, "")
+        y = y + 55
+        
+        CreateToggle(ContentContainer, 10, y, "Team Check", function(v) Settings.Hitbox.TeamCheck = v; extender:Set("TEAM_CHECK", v) end, Settings.Hitbox.TeamCheck)
+        y = y + 40
+        
+        CreateSection(ContentContainer, "HIGHLIGHT", y)
+        y = y + 35
+        
+        CreateToggle(ContentContainer, 10, y, "Usar Highlight", function(v) Settings.Hitbox.UseHighlight = v; extender:Set("USE_HIGHLIGHT", v) end, Settings.Hitbox.UseHighlight)
+        y = y + 40
+        
+        CreateColorPicker(ContentContainer, 10, y, "Cor do Fill", Settings.Hitbox.HighlightColor, function(v) Settings.Hitbox.HighlightColor = v; extender:Set("HIGHLIGHT_FILL_COLOR", v) end)
+        y = y + 40
+        CreateSlider(ContentContainer, 10, y, "Transparência Fill", 0, 1, Settings.Hitbox.HighlightTransparency, function(v) Settings.Hitbox.HighlightTransparency = v; extender:Set("HIGHLIGHT_FILL_TRANSPARENCY", v) end, "")
+        y = y + 55
+    end
+end
 
-FunctionsSection:AddButton({
-    Name = "Exit",
-    Callback = Library.Unload,
-})
+-- Inicializar primeira aba
+UpdateContent("Aimbot")
 
-FunctionsSection:AddButton({
-    Name = "Copy Script Page",
-    Callback = function() setclipboard("https://github.com/Exunys/AirHub") end
-})
+-- Tecla P para abrir/fechar
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.P then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
 
-print("✅ AirHub carregado com FLY e HITBOX!")
-print("🎯 Aimbot | 👁️ Visuals | 🎮 Crosshair | ✈️ Fly | 💪 Hitbox")")
+print("✅ PREMIUM HUB CARREGADO COM SUCESSO!")
+print("📌 Pressione P para abrir/fechar")
+print("🎯 Módulos ativos:", Aimbot and "Aimbot" or "", WallHack and "ESP" or "", Hitbox and "Hitbox" or "")
