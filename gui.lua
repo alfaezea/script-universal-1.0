@@ -60,7 +60,7 @@ loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs
 
 -- Carregar Módulo Diversos (Anti-Spread, No Clip, Infinite Jump)
 print("🔄 Carregando Módulo Diversos...")
-local diversosScript = game:HttpGet("https://raw.githubusercontent.com/SEU-USER/SEU-REPO/main/diversos.lua") -- SUBSTITUA PELA URL
+local diversosScript = game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/diversos.lua") -- SUBSTITUA PELA URL
 local diversosFunc, diversosErr = loadstring(diversosScript)
 if diversosFunc then
     pcall(diversosFunc)
