@@ -1,7 +1,7 @@
 --[[
     ╔═══════════════════════════════════════════════════════════╗
     ║              AIRHUB PREMIUM - COMPLETE                    ║
-    ║         ESP | Aimbot | Hitbox | Fly (Embutido)            ║
+    ║         ESP | Aimbot | Hitbox (Com Tiros) | Fly           ║
     ╚═══════════════════════════════════════════════════════════╝
 ]]
 
@@ -41,50 +41,40 @@ local function loadModule(url, name)
     end
 end
 
--- ========== HITBOX SIMPLES (SEM DEPENDÊNCIAS) ==========
-local HitboxSimple = {}
-HitboxSimple.__index = HitboxSimple
+-- ========== HITBOX QUE FUNCIONA COM TIROS ==========
+local HitboxComTiros = {}
+HitboxComTiros.__index = HitboxComTiros
 
 -- Configurações padrão
 local DEFAULTS = {
     TOGGLE_KEY = "L",
     TARGET_PART = "HumanoidRootPart",
     SIZE = 15,
-    TRANSPARENCY = 0.9,
-    CAN_COLLIDE = false,
+    TRANSPARENCY = 0.5,  -- Meio transparente pra ver
     TEAM_CHECK = true,
     ALIVE_CHECK = true,
-    USE_HIGHLIGHT = true,
-    HIGHLIGHT_COLOR = Color3.fromRGB(255, 117, 24),
-    HIGHLIGHT_TRANSPARENCY = 0.7,
     ACTIVE = false
 }
 
-function HitboxSimple.new(settings)
-    local self = setmetatable({}, HitboxSimple)
+function HitboxComTiros.new(settings)
+    local self = setmetatable({}, HitboxComTiros)
     
-    -- Merge settings
     self.Settings = {}
     for k,v in pairs(DEFAULTS) do self.Settings[k] = v end
     if settings then
         for k,v in pairs(settings) do self.Settings[k] = v end
     end
     
-    self.Players = {}
+    self.HitboxParts = {}  -- Parts fantasmas que recebem os tiros
+    self.OriginalParts = {} -- Parts originais
     self.Connections = {}
-    self.Highlights = {}
-    self.OriginalSizes = {}  -- Guarda tamanhos originais
-    
-    -- Iniciar se ativo
-    if self.Settings.ACTIVE then
-        self:Start()
-    end
+    self.Active = false
     
     return self
 end
 
 -- Verifica se pode modificar o jogador
-function HitboxSimple:CanModify(player)
+function HitboxComTiros:CanModify(player)
     if player == LocalPlayer then return false end
     if not player.Character then return false end
     
@@ -98,105 +88,130 @@ function HitboxSimple:CanModify(player)
     return true
 end
 
--- Salva tamanho original e modifica
-function HitboxSimple:ModifyPart(part)
-    if not part or not part.Parent then return end
+-- Cria uma hitbox fantasma para o jogador
+function HitboxComTiros:CreateGhostHitbox(player)
+    local character = player.Character
+    if not character then return end
     
-    -- Salva tamanho original se ainda não salvou
-    if not self.OriginalSizes[part] then
-        self.OriginalSizes[part] = {
-            Size = part.Size,
-            Transparency = part.Transparency,
-            CanCollide = part.CanCollide
-        }
-    end
+    local targetPart = character:FindFirstChild(self.Settings.TARGET_PART)
+    if not targetPart then return end
     
-    -- Aplica novo tamanho
-    local newSize = Vector3.new(
+    -- Se já existe hitbox para esse player, não criar de novo
+    if self.HitboxParts[player] then return end
+    
+    -- Criar uma part fantasma
+    local ghost = Instance.new("Part")
+    ghost.Name = "GhostHitbox_" .. player.Name
+    ghost.Size = Vector3.new(
         self.Settings.SIZE,
         self.Settings.SIZE,
         self.Settings.SIZE
     )
+    ghost.Transparency = self.Settings.TRANSPARENCY
+    ghost.CanCollide = false
+    ghost.Anchored = false
+    ghost.Massless = true
+    ghost.CanQuery = true
+    ghost.CanTouch = true
     
-    part.Size = newSize
-    part.Transparency = self.Settings.TRANSPARENCY
-    part.CanCollide = self.Settings.CAN_COLLIDE
-    part.Massless = true
+    -- Configurar para receber tiros
+    ghost.CastShadow = false
+    ghost.Material = Enum.Material.Neon
+    ghost.BrickColor = BrickColor.new("Bright red")
     
-    -- Criar highlight se necessário
-    if self.Settings.USE_HIGHLIGHT and not self.Highlights[part] then
-        local highlight = Instance.new("Highlight")
-        highlight.Adornee = part
-        highlight.FillColor = self.Settings.HIGHLIGHT_COLOR
-        highlight.FillTransparency = self.Settings.HIGHLIGHT_TRANSPARENCY
-        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        highlight.Parent = game:GetService("CoreGui")
-        self.Highlights[part] = highlight
-    end
-end
-
--- Restaura tamanho original
-function HitboxSimple:RestorePart(part)
-    if not part then return end
+    -- Posicionar exatamente onde está a parte alvo
+    ghost.CFrame = targetPart.CFrame
     
-    if self.OriginalSizes[part] then
-        local original = self.OriginalSizes[part]
-        part.Size = original.Size
-        part.Transparency = original.Transparency
-        part.CanCollide = original.CanCollide
-        part.Massless = false
-        self.OriginalSizes[part] = nil
-    end
+    -- COLAR a parte fantasma no jogador (Weld)
+    local weld = Instance.new("Weld")
+    weld.Part0 = targetPart
+    weld.Part1 = ghost
+    weld.C0 = CFrame.new(0, 0, 0)
+    weld.C1 = CFrame.new(0, 0, 0)
+    weld.Parent = ghost
     
-    if self.Highlights[part] then
-        self.Highlights[part]:Destroy()
-        self.Highlights[part] = nil
-    end
-end
-
--- Processa um jogador
-function HitboxSimple:ProcessPlayer(player)
-    if not self:CanModify(player) then return end
+    -- Adicionar à hierarquia (colocar no Character do jogador)
+    ghost.Parent = character
     
-    local character = player.Character
-    local targetPart = character:FindFirstChild(self.Settings.TARGET_PART)
+    -- Salvar referências
+    self.HitboxParts[player] = ghost
+    self.OriginalParts[player] = targetPart
     
-    if targetPart then
-        self:ModifyPart(targetPart)
-    end
-    
-    -- Monitorar morte/resspawn
+    -- Conectar morte para remover
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     if humanoid then
-        -- Quando morrer, restaurar
-        local deathConn
-        deathConn = humanoid.Died:Connect(function()
-            self:RestorePart(targetPart)
-            if deathConn then deathConn:Disconnect() end
+        local deathConn = humanoid.Died:Connect(function()
+            self:RemoveGhostHitbox(player)
         end)
         table.insert(self.Connections, deathConn)
-        
-        -- Quando reviver, modificar de novo
-        local respawnConn
-        respawnConn = player.CharacterAdded:Connect(function(newChar)
-            -- Aguardar carregar
-            task.wait(0.5)
-            local newPart = newChar:FindFirstChild(self.Settings.TARGET_PART)
-            if newPart then
-                self:ModifyPart(newPart)
+    end
+    
+    print("👻 Hitbox criada para " .. player.Name)
+    return ghost
+end
+
+-- Remove a hitbox fantasma
+function HitboxComTiros:RemoveGhostHitbox(player)
+    if self.HitboxParts[player] then
+        self.HitboxParts[player]:Destroy()
+        self.HitboxParts[player] = nil
+    end
+    self.OriginalParts[player] = nil
+end
+
+-- Atualizar posição das hitboxes (garantir que acompanham)
+function HitboxComTiros:UpdateHitboxes()
+    for player, ghost in pairs(self.HitboxParts) do
+        if player and player.Character and ghost and ghost.Parent then
+            local targetPart = player.Character:FindFirstChild(self.Settings.TARGET_PART)
+            if targetPart then
+                -- O weld já mantém a posição, mas garantimos que o weld existe
+                local weld = ghost:FindFirstChildOfClass("Weld")
+                if not weld then
+                    -- Recriar weld se perdeu
+                    weld = Instance.new("Weld")
+                    weld.Part0 = targetPart
+                    weld.Part1 = ghost
+                    weld.C0 = CFrame.new(0, 0, 0)
+                    weld.C1 = CFrame.new(0, 0, 0)
+                    weld.Parent = ghost
+                end
+            else
+                -- Se perdeu a parte alvo, remover hitbox
+                self:RemoveGhostHitbox(player)
             end
-            if respawnConn then respawnConn:Disconnect() end
-        end)
-        table.insert(self.Connections, respawnConn)
+        else
+            -- Se player morreu ou ghost foi destruído, limpar
+            self:RemoveGhostHitbox(player)
+        end
     end
 end
 
--- Iniciar hitbox
-function HitboxSimple:Start()
+-- Processar jogador
+function HitboxComTiros:ProcessPlayer(player)
+    if not self:CanModify(player) then return end
+    
+    -- Criar hitbox fantasma
+    self:CreateGhostHitbox(player)
+    
+    -- Monitorar respawn
+    local respawnConn = player.CharacterAdded:Connect(function()
+        task.wait(0.5)
+        if self.Active and self:CanModify(player) then
+            self:CreateGhostHitbox(player)
+        end
+    end)
+    table.insert(self.Connections, respawnConn)
+end
+
+-- Iniciar
+function HitboxComTiros:Start()
     if self.Active then return end
     self.Active = true
     
-    -- Processar jogadores atuais
+    print("🔄 Iniciando Hitbox (compatível com tiros)...")
+    
+    -- Processar jogadores existentes
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
             self:ProcessPlayer(player)
@@ -204,59 +219,46 @@ function HitboxSimple:Start()
     end
     
     -- Detectar novos jogadores
-    local playerAddedConn
-    playerAddedConn = Players.PlayerAdded:Connect(function(player)
+    local playerAddedConn = Players.PlayerAdded:Connect(function(player)
         if player ~= LocalPlayer then
-            -- Aguardar character carregar
-            local charConn
-            charConn = player.CharacterAdded:Connect(function()
-                task.wait(0.5)
-                self:ProcessPlayer(player)
-                if charConn then charConn:Disconnect() end
-            end)
-            table.insert(self.Connections, charConn)
-            
-            -- Se já tem character
-            if player.Character then
+            local function onCharacterAdded()
                 task.wait(0.5)
                 self:ProcessPlayer(player)
             end
+            
+            if player.Character then
+                onCharacterAdded()
+            end
+            
+            local charConn = player.CharacterAdded:Connect(onCharacterAdded)
+            table.insert(self.Connections, charConn)
         end
     end)
     table.insert(self.Connections, playerAddedConn)
     
-    -- Loop de manutenção (garantir que continua funcionando)
-    local loopConn
-    loopConn = RunService.Heartbeat:Connect(function()
+    -- Loop de atualização
+    local loopConn = RunService.Heartbeat:Connect(function()
         if not self.Active then
             if loopConn then loopConn:Disconnect() end
             return
         end
-        
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                local part = player.Character:FindFirstChild(self.Settings.TARGET_PART)
-                if part and not self.OriginalSizes[part] and self:CanModify(player) then
-                    self:ModifyPart(part)
-                end
-            end
-        end
+        self:UpdateHitboxes()
     end)
     table.insert(self.Connections, loopConn)
     
     print("✅ Hitbox Ativada - Tamanho: " .. self.Settings.SIZE)
 end
 
--- Parar hitbox
-function HitboxSimple:Stop()
+-- Parar
+function HitboxComTiros:Stop()
     self.Active = false
     
-    -- Restaurar todas as partes
-    for part in pairs(self.OriginalSizes) do
-        self:RestorePart(part)
+    -- Remover todas as hitboxes fantasmas
+    for player in pairs(self.HitboxParts) do
+        self:RemoveGhostHitbox(player)
     end
     
-    -- Desconectar tudo
+    -- Limpar conexões
     for _, conn in ipairs(self.Connections) do
         if conn and conn.Disconnect then
             conn:Disconnect()
@@ -264,19 +266,11 @@ function HitboxSimple:Stop()
     end
     self.Connections = {}
     
-    -- Destruir highlights
-    for _, highlight in pairs(self.Highlights) do
-        if highlight and highlight.Destroy then
-            highlight:Destroy()
-        end
-    end
-    self.Highlights = {}
-    
     print("❌ Hitbox Desativada")
 end
 
 -- Toggle
-function HitboxSimple:Toggle()
+function HitboxComTiros:Toggle()
     if self.Active then
         self:Stop()
     else
@@ -285,31 +279,40 @@ function HitboxSimple:Toggle()
     return self.Active
 end
 
--- Atualizar configuração
-function HitboxSimple:Set(key, value)
+-- Atualizar tamanho em tempo real
+function HitboxComTiros:Set(key, value)
     local oldValue = self.Settings[key]
     self.Settings[key] = value
     
-    -- Se ativo, reiniciar para aplicar
-    if self.Active and oldValue ~= value then
+    if self.Active and key == "SIZE" and oldValue ~= value then
+        for _, ghost in pairs(self.HitboxParts) do
+            if ghost and ghost.Parent then
+                ghost.Size = Vector3.new(value, value, value)
+            end
+        end
+        print("📏 Tamanho alterado para: " .. value)
+    elseif self.Active and key == "TRANSPARENCY" and oldValue ~= value then
+        for _, ghost in pairs(self.HitboxParts) do
+            if ghost and ghost.Parent then
+                ghost.Transparency = value
+            end
+        end
+    elseif self.Active and key == "TEAM_CHECK" and oldValue ~= value then
         self:Stop()
         self:Start()
     end
 end
 
--- Pegar configuração
-function HitboxSimple:Get(key)
+function HitboxComTiros:Get(key)
     return self.Settings[key]
 end
 
--- Destruir
-function HitboxSimple:Destroy()
+function HitboxComTiros:Destroy()
     self:Stop()
     self.Settings = nil
-    self.Players = nil
+    self.HitboxParts = nil
+    self.OriginalParts = nil
     self.Connections = nil
-    self.Highlights = nil
-    self.OriginalSizes = nil
 end
 
 -- ========== CARREGAR MÓDULOS ==========
@@ -318,14 +321,11 @@ print("🔄 Carregando AirHub Premium...")
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua", "ESP")
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
 
--- Carregar Hitbox (agora é a nossa versão simples)
--- NOTA: Você vai substituir por loadModule com seu link do GitHub depois
--- Por enquanto, vamos criar a Hitbox direto:
-local Hitbox = HitboxSimple.new({
+-- Criar Hitbox que funciona com tiros
+local Hitbox = HitboxComTiros.new({
     SIZE = 15,
-    TRANSPARENCY = 0.9,
+    TRANSPARENCY = 0.5,  -- 0.5 = meio transparente (pra ver)
     TEAM_CHECK = true,
-    USE_HIGHLIGHT = true,
     TARGET_PART = "HumanoidRootPart"
 })
 
@@ -774,7 +774,7 @@ else
     err.Parent = aimbotContent
 end
 
--- ========== CONTEÚDO HITBOX ==========
+-- ========== CONTEÚDO HITBOX (AGORA FUNCIONA COM TIROS) ==========
 local hitboxContent = Instance.new("ScrollingFrame")
 hitboxContent.Size = UDim2.new(1, 0, 1, 0)
 hitboxContent.BackgroundTransparency = 1
@@ -805,20 +805,29 @@ if Hitbox then
         function(v) Hitbox:Set("TEAM_CHECK", v) end)
     yPos = yPos + 45
     
-    createToggle(hitboxContent, "Usar Highlight", yPos,
-        function() return Hitbox:Get("USE_HIGHLIGHT") end,
-        function(v) Hitbox:Set("USE_HIGHLIGHT", v) end)
-    yPos = yPos + 45
-    
     createSlider(hitboxContent, "Tamanho", yPos, 5, 30,
         function() return Hitbox:Get("SIZE") or 15 end,
         function(v) Hitbox:Set("SIZE", v) end, "int")
     yPos = yPos + 60
     
     createSlider(hitboxContent, "Transparência", yPos, 0, 1,
-        function() return Hitbox:Get("TRANSPARENCY") or 0.9 end,
+        function() return Hitbox:Get("TRANSPARENCY") or 0.5 end,
         function(v) Hitbox:Set("TRANSPARENCY", v) end, "float")
     yPos = yPos + 60
+    
+    -- Instruções
+    local info = Instance.new("TextLabel")
+    info.Size = UDim2.new(1, -20, 0, 60)
+    info.Position = UDim2.new(0, 10, 0, yPos + 10)
+    info.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    info.BorderSizePixel = 0
+    info.Text = "⚡ Hitbox Fantasma Ativada!\nOs tiros agora acertam a hitbox aumentada"
+    info.TextColor3 = Color3.fromRGB(255, 255, 0)
+    info.TextWrapped = true
+    info.TextScaled = true
+    info.Font = Enum.Font.Gotham
+    info.Parent = hitboxContent
+    yPos = yPos + 70
     
     hitboxContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 else
@@ -908,4 +917,4 @@ espContent.Visible = true
 tabESP.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
 
 print("✅ AirHub Premium carregado com sucesso!")
-print("📌 Use as abas para configurar cada módulo")
+print("📌 Hitbox agora funciona com tiros!")
