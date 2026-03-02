@@ -2,7 +2,7 @@
 	AirHub by Exunys © CC0 1.0 Universal (2023)
 	https://github.com/Exunys
 	Modificado com Smoothness, Fly e HITBOX EXTENDER
-	VERSÃO COMPLETA - Visuals, Crosshair e Hitbox RESTAURADOS!
+	VERSÃO COM PROTEÇÃO DE ERROS - CORRIGIDA!
 ]]
 
 --// Cache
@@ -14,10 +14,24 @@ if AirHub or AirHubV2Loaded then return end
 --// Environment
 getgenv().AirHub = {}
 
---// Load Modules (LINKS CORRIGIDOS - TODOS FUNCIONANDO!)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua"))()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua"))() -- Link CORRETO do ESP
-loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua"))()
+--// Função segura para carregar módulos
+local function safeLoad(url)
+    local success, result = pcall(function()
+        return loadstring(game:HttpGet(url))()
+    end)
+    if success then
+        print("✅ Módulo carregado: " .. url)
+        return result
+    else
+        warn("❌ Falha ao carregar: " .. url .. "\n" .. tostring(result))
+        return nil
+    end
+end
+
+--// Load Modules com proteção
+safeLoad("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua")
+safeLoad("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua")
+safeLoad("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua")
 
 --// Variables
 local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
@@ -891,6 +905,9 @@ FunctionsSection:AddButton({
 	Callback = function() setclipboard("https://github.com/Exunys/AirHub") end
 })
 
+print("✅ AirHub COMPLETO carregado!")
+print("🎯 Aimbot | 👁️ Visuals | 🎮 Crosshair | ✈️ Fly | 💪 Hitbox")
+print("✅ Todas as funcionalidades RESTAURADAS!")
 print("✅ AirHub COMPLETO carregado!")
 print("🎯 Aimbot | 👁️ Visuals | 🎮 Crosshair | ✈️ Fly | 💪 Hitbox")
 print("✅ Todas as funcionalidades RESTAURADAS!")
