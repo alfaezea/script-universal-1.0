@@ -27,6 +27,72 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Mo
 
 --// Variables
 
+-- ========== SISTEMA DE FLY SIMPLES ==========
+local Fly = {
+    Enabled = false,
+    Speed = 50,
+    BodyGyro = nil,
+    BodyVelocity = nil,
+    Connections = {}
+}
+
+local function ToggleFly(state)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+
+    if not humanoid or not rootPart then return end
+
+    if state then
+        humanoid.PlatformStand = true
+
+        Fly.BodyGyro = Instance.new("BodyGyro")
+        Fly.BodyGyro.P = 9e4
+        Fly.BodyGyro.MaxTorque = Vector3.new(9e4, 9e4, 9e4)
+        Fly.BodyGyro.CFrame = rootPart.CFrame
+        Fly.BodyGyro.Parent = rootPart
+
+        Fly.BodyVelocity = Instance.new("BodyVelocity")
+        Fly.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        Fly.BodyVelocity.MaxForce = Vector3.new(9e4, 9e4, 9e4)
+        Fly.BodyVelocity.Parent = rootPart
+
+        Fly.Connections.RenderStepped = game:GetService("RunService").RenderStepped:Connect(function()
+            if not Fly.Enabled then return end
+
+            local moveDirection = Vector3.new(0, 0, 0)
+            local camera = workspace.CurrentCamera
+
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDirection = moveDirection + Vector3.new(0, 1, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDirection = moveDirection + Vector3.new(0, -1, 0) end
+
+            if moveDirection.Magnitude > 0 then
+                moveDirection = moveDirection.Unit * Fly.Speed
+            end
+
+            if Fly.BodyVelocity then Fly.BodyVelocity.Velocity = moveDirection end
+            if Fly.BodyGyro then Fly.BodyGyro.CFrame = CFrame.new(rootPart.Position, rootPart.Position + camera.CFrame.LookVector) end
+        end)
+
+        Fly.Enabled = true
+        print("✅ Fly ATIVADO")
+    else
+        Fly.Enabled = false
+        if Fly.Connections.RenderStepped then Fly.Connections.RenderStepped:Disconnect() end
+        if Fly.BodyGyro then Fly.BodyGyro:Destroy(); Fly.BodyGyro = nil end
+        if Fly.BodyVelocity then Fly.BodyVelocity:Destroy(); Fly.BodyVelocity = nil end
+        if humanoid then humanoid.PlatformStand = false end
+        print("❌ Fly DESATIVADO")
+    end
+end
+
 local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
 local Aimbot, WallHack = getgenv().AirHub.Aimbot, getgenv().AirHub.WallHack
 local Hitbox = getgenv().LimbExtender -- Hitbox module
