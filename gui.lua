@@ -45,7 +45,15 @@ end
 print("🔄 Carregando AirHub Premium...")
 
 -- Carregar ESP AVANÇADO (substitua pela sua URL)
-loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua", "ESP")
+print("🔄 Carregando ESP Avançado...")
+local espScript = game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua")
+local espFunc, espErr = loadstring(espScript)
+if espFunc then
+    pcall(espFunc)
+    print("✅ ESP Avançado carregado!")
+else
+    warn("❌ Erro no ESP: " .. tostring(espErr))
+end
 
 -- Carregar Aimbot
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
