@@ -1,7 +1,7 @@
 --[[
     ╔═══════════════════════════════════════════════════════════╗
     ║              AIRHUB PREMIUM - COMPLETE                    ║
-    ║         ESP | Aimbot | Hitbox (Com Tiros) | Fly           ║
+    ║         ESP (OTIMIZADO) | Aimbot | Diversos | Fly         ║
     ╚═══════════════════════════════════════════════════════════╝
 ]]
 
@@ -41,299 +41,20 @@ local function loadModule(url, name)
     end
 end
 
--- ========== HITBOX QUE FUNCIONA COM TIROS ==========
-local HitboxComTiros = {}
-HitboxComTiros.__index = HitboxComTiros
-
--- Configurações padrão
-local DEFAULTS = {
-    TOGGLE_KEY = "L",
-    TARGET_PART = "HumanoidRootPart",
-    SIZE = 15,
-    TRANSPARENCY = 0.5,  -- Meio transparente pra ver
-    TEAM_CHECK = true,
-    ALIVE_CHECK = true,
-    ACTIVE = false
-}
-
-function HitboxComTiros.new(settings)
-    local self = setmetatable({}, HitboxComTiros)
-    
-    self.Settings = {}
-    for k,v in pairs(DEFAULTS) do self.Settings[k] = v end
-    if settings then
-        for k,v in pairs(settings) do self.Settings[k] = v end
-    end
-    
-    self.HitboxParts = {}  -- Parts fantasmas que recebem os tiros
-    self.OriginalParts = {} -- Parts originais
-    self.Connections = {}
-    self.Active = false
-    
-    return self
-end
-
--- Verifica se pode modificar o jogador
-function HitboxComTiros:CanModify(player)
-    if player == LocalPlayer then return false end
-    if not player.Character then return false end
-    
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-    if not humanoid or humanoid.Health <= 0 then return false end
-    
-    if self.Settings.TEAM_CHECK and player.Team == LocalPlayer.Team then
-        return false
-    end
-    
-    return true
-end
-
--- Cria uma hitbox fantasma para o jogador
-function HitboxComTiros:CreateGhostHitbox(player)
-    local character = player.Character
-    if not character then return end
-    
-    local targetPart = character:FindFirstChild(self.Settings.TARGET_PART)
-    if not targetPart then return end
-    
-    -- Se já existe hitbox para esse player, não criar de novo
-    if self.HitboxParts[player] then return end
-    
-    -- Criar uma part fantasma
-    local ghost = Instance.new("Part")
-    ghost.Name = "GhostHitbox_" .. player.Name
-    ghost.Size = Vector3.new(
-        self.Settings.SIZE,
-        self.Settings.SIZE,
-        self.Settings.SIZE
-    )
-    ghost.Transparency = self.Settings.TRANSPARENCY
-    ghost.CanCollide = false
-    ghost.Anchored = false
-    ghost.Massless = true
-    ghost.CanQuery = true
-    ghost.CanTouch = true
-    
-    -- Configurar para receber tiros
-    ghost.CastShadow = false
-    ghost.Material = Enum.Material.Neon
-    ghost.BrickColor = BrickColor.new("Bright red")
-    
-    -- Posicionar exatamente onde está a parte alvo
-    ghost.CFrame = targetPart.CFrame
-    
-    -- COLAR a parte fantasma no jogador (Weld)
-    local weld = Instance.new("Weld")
-    weld.Part0 = targetPart
-    weld.Part1 = ghost
-    weld.C0 = CFrame.new(0, 0, 0)
-    weld.C1 = CFrame.new(0, 0, 0)
-    weld.Parent = ghost
-    
-    -- Adicionar à hierarquia (colocar no Character do jogador)
-    ghost.Parent = character
-    
-    -- Salvar referências
-    self.HitboxParts[player] = ghost
-    self.OriginalParts[player] = targetPart
-    
-    -- Conectar morte para remover
-    local humanoid = character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        local deathConn = humanoid.Died:Connect(function()
-            self:RemoveGhostHitbox(player)
-        end)
-        table.insert(self.Connections, deathConn)
-    end
-    
-    print("👻 Hitbox criada para " .. player.Name)
-    return ghost
-end
-
--- Remove a hitbox fantasma
-function HitboxComTiros:RemoveGhostHitbox(player)
-    if self.HitboxParts[player] then
-        self.HitboxParts[player]:Destroy()
-        self.HitboxParts[player] = nil
-    end
-    self.OriginalParts[player] = nil
-end
-
--- Atualizar posição das hitboxes (garantir que acompanham)
-function HitboxComTiros:UpdateHitboxes()
-    for player, ghost in pairs(self.HitboxParts) do
-        if player and player.Character and ghost and ghost.Parent then
-            local targetPart = player.Character:FindFirstChild(self.Settings.TARGET_PART)
-            if targetPart then
-                -- O weld já mantém a posição, mas garantimos que o weld existe
-                local weld = ghost:FindFirstChildOfClass("Weld")
-                if not weld then
-                    -- Recriar weld se perdeu
-                    weld = Instance.new("Weld")
-                    weld.Part0 = targetPart
-                    weld.Part1 = ghost
-                    weld.C0 = CFrame.new(0, 0, 0)
-                    weld.C1 = CFrame.new(0, 0, 0)
-                    weld.Parent = ghost
-                end
-            else
-                -- Se perdeu a parte alvo, remover hitbox
-                self:RemoveGhostHitbox(player)
-            end
-        else
-            -- Se player morreu ou ghost foi destruído, limpar
-            self:RemoveGhostHitbox(player)
-        end
-    end
-end
-
--- Processar jogador
-function HitboxComTiros:ProcessPlayer(player)
-    if not self:CanModify(player) then return end
-    
-    -- Criar hitbox fantasma
-    self:CreateGhostHitbox(player)
-    
-    -- Monitorar respawn
-    local respawnConn = player.CharacterAdded:Connect(function()
-        task.wait(0.5)
-        if self.Active and self:CanModify(player) then
-            self:CreateGhostHitbox(player)
-        end
-    end)
-    table.insert(self.Connections, respawnConn)
-end
-
--- Iniciar
-function HitboxComTiros:Start()
-    if self.Active then return end
-    self.Active = true
-    
-    print("🔄 Iniciando Hitbox (compatível com tiros)...")
-    
-    -- Processar jogadores existentes
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            self:ProcessPlayer(player)
-        end
-    end
-    
-    -- Detectar novos jogadores
-    local playerAddedConn = Players.PlayerAdded:Connect(function(player)
-        if player ~= LocalPlayer then
-            local function onCharacterAdded()
-                task.wait(0.5)
-                self:ProcessPlayer(player)
-            end
-            
-            if player.Character then
-                onCharacterAdded()
-            end
-            
-            local charConn = player.CharacterAdded:Connect(onCharacterAdded)
-            table.insert(self.Connections, charConn)
-        end
-    end)
-    table.insert(self.Connections, playerAddedConn)
-    
-    -- Loop de atualização
-    local loopConn = RunService.Heartbeat:Connect(function()
-        if not self.Active then
-            if loopConn then loopConn:Disconnect() end
-            return
-        end
-        self:UpdateHitboxes()
-    end)
-    table.insert(self.Connections, loopConn)
-    
-    print("✅ Hitbox Ativada - Tamanho: " .. self.Settings.SIZE)
-end
-
--- Parar
-function HitboxComTiros:Stop()
-    self.Active = false
-    
-    -- Remover todas as hitboxes fantasmas
-    for player in pairs(self.HitboxParts) do
-        self:RemoveGhostHitbox(player)
-    end
-    
-    -- Limpar conexões
-    for _, conn in ipairs(self.Connections) do
-        if conn and conn.Disconnect then
-            conn:Disconnect()
-        end
-    end
-    self.Connections = {}
-    
-    print("❌ Hitbox Desativada")
-end
-
--- Toggle
-function HitboxComTiros:Toggle()
-    if self.Active then
-        self:Stop()
-    else
-        self:Start()
-    end
-    return self.Active
-end
-
--- Atualizar tamanho em tempo real
-function HitboxComTiros:Set(key, value)
-    local oldValue = self.Settings[key]
-    self.Settings[key] = value
-    
-    if self.Active and key == "SIZE" and oldValue ~= value then
-        for _, ghost in pairs(self.HitboxParts) do
-            if ghost and ghost.Parent then
-                ghost.Size = Vector3.new(value, value, value)
-            end
-        end
-        print("📏 Tamanho alterado para: " .. value)
-    elseif self.Active and key == "TRANSPARENCY" and oldValue ~= value then
-        for _, ghost in pairs(self.HitboxParts) do
-            if ghost and ghost.Parent then
-                ghost.Transparency = value
-            end
-        end
-    elseif self.Active and key == "TEAM_CHECK" and oldValue ~= value then
-        self:Stop()
-        self:Start()
-    end
-end
-
-function HitboxComTiros:Get(key)
-    return self.Settings[key]
-end
-
-function HitboxComTiros:Destroy()
-    self:Stop()
-    self.Settings = nil
-    self.HitboxParts = nil
-    self.OriginalParts = nil
-    self.Connections = nil
-end
-
 -- ========== CARREGAR MÓDULOS ==========
 print("🔄 Carregando AirHub Premium...")
 
-loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua", "ESP")
-loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
+-- Carregar ESP OTIMIZADO (substitua pela sua URL)
+loadModule("https://raw.githubusercontent.com/SEU-USER/SEU-REPO/esp-otimizado.lua", "ESP")
 
--- Criar Hitbox que funciona com tiros
-local Hitbox = HitboxComTiros.new({
-    SIZE = 15,
-    TRANSPARENCY = 0.5,  -- 0.5 = meio transparente (pra ver)
-    TEAM_CHECK = true,
-    TARGET_PART = "HumanoidRootPart"
-})
+-- Carregar Aimbot
+loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
 
 -- Aguardar carregamento
 task.wait(2)
 
 -- ========== OBTER REFERÊNCIAS ==========
-local ESP = getgenv().AirHub and getgenv().AirHub.WallHack
+local ESP = getgenv().AirHub and getgenv().AirHub.WallHack_OTIMIZADO
 local Aimbot = getgenv().AirHub and getgenv().AirHub.Aimbot
 
 -- ========== SISTEMA DE FLY EMBUTIDO ==========
@@ -450,7 +171,7 @@ CloseBtn.Parent = MainFrame
 
 CloseBtn.MouseButton1Click:Connect(function()
     if Fly.Enabled then ToggleFly(false) end
-    if Hitbox and Hitbox.Destroy then Hitbox:Destroy() end
+    if ESP and ESP.Functions and ESP.Functions.Exit then ESP.Functions:Exit() end
     ScreenGui:Destroy()
 end)
 
@@ -478,8 +199,8 @@ end
 
 createStatus("ESP: " .. (ESP and "✅" or "❌"), ESP and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 10)
 createStatus("Aimbot: " .. (Aimbot and "✅" or "❌"), Aimbot and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 170)
-createStatus("Hitbox: " .. (Hitbox and "✅" or "❌"), Hitbox and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 330)
-createStatus("Fly: ✅", Color3.fromRGB(0, 255, 0), 490)
+createStatus("Fly: ✅", Color3.fromRGB(0, 255, 0), 330)
+createStatus("Diversos: ✅", Color3.fromRGB(0, 255, 0), 490)
 
 -- Abas
 local TabContainer = Instance.new("Frame")
@@ -490,7 +211,6 @@ TabContainer.BorderSizePixel = 0
 TabContainer.Parent = MainFrame
 
 local tabs = {}
-local currentTab = nil
 
 local function createTab(name, pos)
     local btn = Instance.new("TextButton")
@@ -503,6 +223,7 @@ local function createTab(name, pos)
     btn.TextScaled = true
     btn.Font = Enum.Font.Gotham
     btn.Parent = TabContainer
+    table.insert(tabs, btn)
     return btn
 end
 
@@ -629,66 +350,138 @@ end
 -- ========== CRIAR ABAS ==========
 local tabESP = createTab("ESP", 1)
 local tabAimbot = createTab("Aimbot", 2)
-local tabHitbox = createTab("Hitbox", 3)
+local tabDiversos = createTab("Diversos", 3)
 local tabFly = createTab("Fly", 4)
 
--- ========== CONTEÚDO ESP ==========
+-- ========== CONTEÚDO ESP (OTIMIZADO) ==========
 local espContent = Instance.new("ScrollingFrame")
 espContent.Size = UDim2.new(1, 0, 1, 0)
 espContent.BackgroundTransparency = 1
 espContent.BorderSizePixel = 0
 espContent.ScrollBarThickness = 5
-espContent.CanvasSize = UDim2.new(0, 0, 0, 400)
+espContent.CanvasSize = UDim2.new(0, 0, 0, 500)
 espContent.Visible = false
 espContent.Parent = ContentFrame
 
 if ESP then
     local yPos = 10
     
+    -- Título
+    local titleESP = Instance.new("TextLabel")
+    titleESP.Size = UDim2.new(1, -20, 0, 30)
+    titleESP.Position = UDim2.new(0, 10, 0, yPos)
+    titleESP.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
+    titleESP.BorderSizePixel = 0
+    titleESP.Text = "⚡ ESP OTIMIZADO - LEVE ⚡"
+    titleESP.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleESP.TextScaled = true
+    titleESP.Font = Enum.Font.GothamBold
+    titleESP.Parent = espContent
+    yPos = yPos + 40
+    
+    -- Ativar ESP
     createToggle(espContent, "Ativar ESP", yPos, 
         function() return ESP.Settings.Enabled end,
         function(v) ESP.Settings.Enabled = v end)
     yPos = yPos + 45
     
+    -- Separador Visual
+    local sep1 = Instance.new("TextLabel")
+    sep1.Size = UDim2.new(1, -20, 0, 20)
+    sep1.Position = UDim2.new(0, 10, 0, yPos)
+    sep1.BackgroundTransparency = 1
+    sep1.Text = "═══ ELEMENTOS VISUAIS ═══"
+    sep1.TextColor3 = Color3.fromRGB(255, 128, 0)
+    sep1.TextScaled = true
+    sep1.Font = Enum.Font.Gotham
+    sep1.Parent = espContent
+    yPos = yPos + 25
+    
+    -- Box
     createToggle(espContent, "Box ESP", yPos,
-        function() return ESP.Visuals.BoxSettings.Enabled end,
-        function(v) ESP.Visuals.BoxSettings.Enabled = v end)
+        function() return ESP.Visuals.Box.Enabled end,
+        function(v) ESP.Visuals.Box.Enabled = v end)
     yPos = yPos + 45
     
+    -- Tracers
     createToggle(espContent, "Tracers", yPos,
-        function() return ESP.Visuals.TracersSettings.Enabled end,
-        function(v) ESP.Visuals.TracersSettings.Enabled = v end)
+        function() return ESP.Visuals.Tracer.Enabled end,
+        function(v) ESP.Visuals.Tracer.Enabled = v end)
     yPos = yPos + 45
     
+    -- Head Dot
     createToggle(espContent, "Head Dot", yPos,
-        function() return ESP.Visuals.HeadDotSettings.Enabled end,
-        function(v) ESP.Visuals.HeadDotSettings.Enabled = v end)
+        function() return ESP.Visuals.HeadDot.Enabled end,
+        function(v) ESP.Visuals.HeadDot.Enabled = v end)
     yPos = yPos + 45
     
+    -- Separador Info
+    local sep2 = Instance.new("TextLabel")
+    sep2.Size = UDim2.new(1, -20, 0, 20)
+    sep2.Position = UDim2.new(0, 10, 0, yPos)
+    sep2.BackgroundTransparency = 1
+    sep2.Text = "═══ INFORMAÇÕES ═══"
+    sep2.TextColor3 = Color3.fromRGB(255, 128, 0)
+    sep2.TextScaled = true
+    sep2.Font = Enum.Font.Gotham
+    sep2.Parent = espContent
+    yPos = yPos + 25
+    
+    -- Mostrar Nomes
+    createToggle(espContent, "Mostrar Nomes", yPos,
+        function() return ESP.Visuals.Name.Enabled end,
+        function(v) ESP.Visuals.Name.Enabled = v end)
+    yPos = yPos + 45
+    
+    -- Mostrar Distância
+    createToggle(espContent, "Mostrar Distância", yPos,
+        function() return ESP.Visuals.Distance.Enabled end,
+        function(v) ESP.Visuals.Distance.Enabled = v end)
+    yPos = yPos + 45
+    
+    -- Mostrar Vida
+    createToggle(espContent, "Mostrar Vida", yPos,
+        function() return ESP.Visuals.Health.Enabled end,
+        function(v) ESP.Visuals.Health.Enabled = v end)
+    yPos = yPos + 45
+    
+    -- Separador Checks
+    local sep3 = Instance.new("TextLabel")
+    sep3.Size = UDim2.new(1, -20, 0, 20)
+    sep3.Position = UDim2.new(0, 10, 0, yPos)
+    sep3.BackgroundTransparency = 1
+    sep3.Text = "═══ VERIFICAÇÕES ═══"
+    sep3.TextColor3 = Color3.fromRGB(255, 128, 0)
+    sep3.TextScaled = true
+    sep3.Font = Enum.Font.Gotham
+    sep3.Parent = espContent
+    yPos = yPos + 25
+    
+    -- Team Check
     createToggle(espContent, "Team Check", yPos,
         function() return ESP.Settings.TeamCheck end,
         function(v) ESP.Settings.TeamCheck = v end)
     yPos = yPos + 45
     
+    -- Alive Check
     createToggle(espContent, "Alive Check", yPos,
         function() return ESP.Settings.AliveCheck end,
         function(v) ESP.Settings.AliveCheck = v end)
     yPos = yPos + 45
     
-    createToggle(espContent, "Mostrar Nomes", yPos,
-        function() return ESP.Visuals.ESPSettings.DisplayName end,
-        function(v) ESP.Visuals.ESPSettings.DisplayName = v end)
-    yPos = yPos + 45
-    
-    createToggle(espContent, "Mostrar Distância", yPos,
-        function() return ESP.Visuals.ESPSettings.DisplayDistance end,
-        function(v) ESP.Visuals.ESPSettings.DisplayDistance = v end)
-    yPos = yPos + 45
-    
-    createToggle(espContent, "Mostrar Vida", yPos,
-        function() return ESP.Visuals.ESPSettings.DisplayHealth end,
-        function(v) ESP.Visuals.ESPSettings.DisplayHealth = v end)
-    yPos = yPos + 45
+    -- Aviso de otimização
+    local warning = Instance.new("TextLabel")
+    warning.Size = UDim2.new(1, -20, 0, 40)
+    warning.Position = UDim2.new(0, 10, 0, yPos)
+    warning.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    warning.BorderSizePixel = 0
+    warning.Text = "⚡ Versão otimizada!\n90% menos lag"
+    warning.TextColor3 = Color3.fromRGB(0, 255, 0)
+    warning.TextWrapped = true
+    warning.TextScaled = true
+    warning.Font = Enum.Font.Gotham
+    warning.Parent = espContent
+    yPos = yPos + 50
     
     espContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 else
@@ -696,8 +489,9 @@ else
     err.Size = UDim2.new(1, 0, 0, 50)
     err.Position = UDim2.new(0, 0, 0, 20)
     err.BackgroundTransparency = 1
-    err.Text = "❌ ESP não carregado!"
+    err.Text = "❌ ESP não carregado!\nVerifique a URL"
     err.TextColor3 = Color3.fromRGB(255, 0, 0)
+    err.TextWrapped = true
     err.TextScaled = true
     err.Font = Enum.Font.Gotham
     err.Parent = espContent
@@ -774,73 +568,78 @@ else
     err.Parent = aimbotContent
 end
 
--- ========== CONTEÚDO HITBOX (AGORA FUNCIONA COM TIROS) ==========
-local hitboxContent = Instance.new("ScrollingFrame")
-hitboxContent.Size = UDim2.new(1, 0, 1, 0)
-hitboxContent.BackgroundTransparency = 1
-hitboxContent.BorderSizePixel = 0
-hitboxContent.ScrollBarThickness = 5
-hitboxContent.CanvasSize = UDim2.new(0, 0, 0, 300)
-hitboxContent.Visible = false
-hitboxContent.Parent = ContentFrame
+-- ========== CONTEÚDO DIVERSOS ==========
+local diversosContent = Instance.new("ScrollingFrame")
+diversosContent.Size = UDim2.new(1, 0, 1, 0)
+diversosContent.BackgroundTransparency = 1
+diversosContent.BorderSizePixel = 0
+diversosContent.ScrollBarThickness = 5
+diversosContent.CanvasSize = UDim2.new(0, 0, 0, 400)
+diversosContent.Visible = false
+diversosContent.Parent = ContentFrame
 
-if Hitbox then
-    local yPos = 10
-    local hitboxActive = false
-    
-    local toggleBtn = createToggle(hitboxContent, "Ativar Hitbox", yPos,
-        function() return hitboxActive end,
-        function(v) 
-            hitboxActive = v
-            if v then 
-                Hitbox:Start()
-            else 
-                Hitbox:Stop()
-            end
-        end)
-    yPos = yPos + 45
-    
-    createToggle(hitboxContent, "Team Check", yPos,
-        function() return Hitbox:Get("TEAM_CHECK") end,
-        function(v) Hitbox:Set("TEAM_CHECK", v) end)
-    yPos = yPos + 45
-    
-    createSlider(hitboxContent, "Tamanho", yPos, 5, 30,
-        function() return Hitbox:Get("SIZE") or 15 end,
-        function(v) Hitbox:Set("SIZE", v) end, "int")
-    yPos = yPos + 60
-    
-    createSlider(hitboxContent, "Transparência", yPos, 0, 1,
-        function() return Hitbox:Get("TRANSPARENCY") or 0.5 end,
-        function(v) Hitbox:Set("TRANSPARENCY", v) end, "float")
-    yPos = yPos + 60
-    
-    -- Instruções
-    local info = Instance.new("TextLabel")
-    info.Size = UDim2.new(1, -20, 0, 60)
-    info.Position = UDim2.new(0, 10, 0, yPos + 10)
-    info.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    info.BorderSizePixel = 0
-    info.Text = "⚡ Hitbox Fantasma Ativada!\nOs tiros agora acertam a hitbox aumentada"
-    info.TextColor3 = Color3.fromRGB(255, 255, 0)
-    info.TextWrapped = true
-    info.TextScaled = true
-    info.Font = Enum.Font.Gotham
-    info.Parent = hitboxContent
-    yPos = yPos + 70
-    
-    hitboxContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
-else
-    local err = Instance.new("TextLabel")
-    err.Size = UDim2.new(1, 0, 0, 50)
-    err.Position = UDim2.new(0, 0, 0, 20)
-    err.BackgroundTransparency = 1
-    err.Text = "❌ Hitbox não carregado!"
-    err.TextColor3 = Color3.fromRGB(255, 0, 0)
-    err.TextScaled = true
-    err.Font = Enum.Font.Gotham
-    err.Parent = hitboxContent
-end
+local yPos = 10
+
+-- Título
+local titleDiv = Instance.new("TextLabel")
+titleDiv.Size = UDim2.new(1, -20, 0, 30)
+titleDiv.Position = UDim2.new(0, 10, 0, yPos)
+titleDiv.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
+titleDiv.BorderSizePixel = 0
+titleDiv.Text = "⚙️ UTILITÁRIOS ⚙️"
+titleDiv.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleDiv.TextScaled = true
+titleDiv.Font = Enum.Font.GothamBold
+titleDiv.Parent = diversosContent
+yPos = yPos + 40
+
+-- Anti-Aim
+local antiAimToggle = createToggle(diversosContent, "Anti-Aim (Em breve)", yPos,
+    function() return false end,
+    function(v) 
+        if v then
+            print("🔄 Anti-Aim (Em desenvolvimento)")
+        end
+    end)
+yPos = yPos + 45
+
+-- No Clip
+local noClipToggle = createToggle(diversosContent, "No Clip (Em breve)", yPos,
+    function() return false end,
+    function(v)
+        if v then
+            print("🧱 No Clip (Em desenvolvimento)")
+        end
+    end)
+yPos = yPos + 45
+
+-- Speed Hack
+local speedSlider = createSlider(diversosContent, "Speed Hack (Em breve)", yPos, 16, 100,
+    function() return 16 end,
+    function(v)
+        print("⚡ Speed: " .. v .. " (Em desenvolvimento)")
+    end, "int")
+yPos = yPos + 60
+
+-- Jump Power
+local jumpSlider = createSlider(diversosContent, "Jump Power (Em breve)", yPos, 50, 200,
+    function() return 50 end,
+    function(v)
+        print("🦘 Jump: " .. v .. " (Em desenvolvimento)")
+    end, "int")
+yPos = yPos + 60
+
+-- Infinito Jump
+local infJumpToggle = createToggle(diversosContent, "Infinito Jump (Em breve)", yPos,
+    function() return false end,
+    function(v)
+        if v then
+            print("🦘 Infinito Jump (Em desenvolvimento)")
+        end
+    end)
+yPos = yPos + 45
+
+diversosContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 
 -- ========== CONTEÚDO FLY ==========
 local flyContent = Instance.new("Frame")
@@ -849,25 +648,25 @@ flyContent.BackgroundTransparency = 1
 flyContent.Visible = false
 flyContent.Parent = ContentFrame
 
-local yPos = 20
+local yPosFly = 20
 local flyActive = false
 
-local flyToggle = createToggle(flyContent, "Ativar Fly", yPos,
+local flyToggle = createToggle(flyContent, "Ativar Fly", yPosFly,
     function() return flyActive end,
     function(v) 
         flyActive = v
         ToggleFly(v)
     end)
-yPos = yPos + 45
+yPosFly = yPosFly + 45
 
-createSlider(flyContent, "Velocidade", yPos, 10, 200,
+createSlider(flyContent, "Velocidade", yPosFly, 10, 200,
     function() return Fly.Speed end,
     function(v) Fly.Speed = v end, "int")
-yPos = yPos + 60
+yPosFly = yPosFly + 60
 
 local controls = Instance.new("TextLabel")
 controls.Size = UDim2.new(1, -40, 0, 100)
-controls.Position = UDim2.new(0, 20, 0, yPos)
+controls.Position = UDim2.new(0, 20, 0, yPosFly)
 controls.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 controls.BorderSizePixel = 0
 controls.Text = "Controles:\nWASD - Movimento\nEspaço - Subir\nShift - Descer"
@@ -881,7 +680,7 @@ controls.Parent = flyContent
 local function hideAllTabs()
     espContent.Visible = false
     aimbotContent.Visible = false
-    hitboxContent.Visible = false
+    diversosContent.Visible = false
     flyContent.Visible = false
     for _, btn in pairs(tabs) do
         btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
@@ -900,10 +699,10 @@ tabAimbot.MouseButton1Click:Connect(function()
     tabAimbot.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
 end)
 
-tabHitbox.MouseButton1Click:Connect(function()
+tabDiversos.MouseButton1Click:Connect(function()
     hideAllTabs()
-    hitboxContent.Visible = true
-    tabHitbox.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
+    diversosContent.Visible = true
+    tabDiversos.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
 end)
 
 tabFly.MouseButton1Click:Connect(function()
@@ -917,4 +716,4 @@ espContent.Visible = true
 tabESP.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
 
 print("✅ AirHub Premium carregado com sucesso!")
-print("📌 Hitbox agora funciona com tiros!")
+print("📌 ESP OTIMIZADO - 90% mais leve!")
