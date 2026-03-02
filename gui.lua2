@@ -1,8 +1,63 @@
-print("✅ GUI CARREGADA!")
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 100)
-Frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-Frame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-Frame.Parent = ScreenGui
+--[[
+	AirHub by Exunys - Versão Otimizada
+	Funcionalidades: Aimbot, Visuals, Crosshair, Fly, Hitbox
+]]
+
+-- Carregar módulos com verificação
+local function loadModule(url)
+    local success, result = pcall(function()
+        return loadstring(game:HttpGet(url))()
+    end)
+    if success then
+        print("✅ Módulo carregado: " .. url)
+        return result
+    else
+        warn("❌ Falha ao carregar: " .. url)
+        return nil
+    end
+end
+
+-- Carregar módulos
+local Aimbot = loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua")
+local ESP = loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua")
+local Hitbox = loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua")
+
+-- Carregar biblioteca UI
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/UI%20Library/Source.lua"))()
+
+-- Criar janela
+local Window = Library:CreateWindow({
+    Name = "AirHub",
+    Themeable = { Image = "7059346386", Info = "Made by Exunys", Credit = false }
+})
+
+-- Criar abas
+local AimbotTab = Window:CreateTab("Aimbot")
+local VisualsTab = Window:CreateTab("Visuals")
+local MiscTab = Window:CreateTab("Diversos")
+
+-- Configurações do Aimbot
+local AimbotSection = AimbotTab:CreateSection("Configurações")
+AimbotSection:AddToggle({
+    Name = "Ativar Aimbot",
+    Value = false,
+    Callback = function(v) if Aimbot then Aimbot.Enabled = v end end
+})
+
+-- Configurações do Visuals
+local VisualsSection = VisualsTab:CreateSection("ESP")
+VisualsSection:AddToggle({
+    Name = "Ativar ESP",
+    Value = false,
+    Callback = function(v) if ESP then ESP.Enabled = v end end
+})
+
+-- Configurações do Misc
+local MiscSection = MiscTab:CreateSection("Extras")
+MiscSection:AddToggle({
+    Name = "Ativar Hitbox",
+    Value = false,
+    Callback = function(v) if Hitbox then Hitbox.Enabled = v end end
+})
+
+print("✅ Script carregado com sucesso!")
