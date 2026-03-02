@@ -4,7 +4,7 @@ aimbotContent.Size = UDim2.new(1, 0, 1, 0)
 aimbotContent.BackgroundTransparency = 1
 aimbotContent.BorderSizePixel = 0
 aimbotContent.ScrollBarThickness = 5
-aimbotContent.CanvasSize = UDim2.new(0, 0, 0, 800)
+aimbotContent.CanvasSize = UDim2.new(0, 0, 0, 900)
 aimbotContent.Visible = false
 aimbotContent.Parent = ContentFrame
 
@@ -17,7 +17,7 @@ if Aimbot then
     titleAim.Position = UDim2.new(0, 10, 0, yPos)
     titleAim.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
     titleAim.BorderSizePixel = 0
-    titleAim.Text = "🎯 AIMBOT CONFIGURÁVEL"
+    titleAim.Text = "🎯 AIMBOT ULTRA COMPLETO"
     titleAim.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleAim.TextScaled = true
     titleAim.Font = Enum.Font.GothamBold
@@ -30,7 +30,7 @@ if Aimbot then
         function(v) Aimbot.Settings.Enabled = v end)
     yPos = yPos + 45
     
-    -- PARTE DO CORPO (DROPDOWN)
+    -- PARTE DO CORPO (TODAS AS PARTES)
     local partLabel = Instance.new("TextLabel")
     partLabel.Size = UDim2.new(0, 200, 0, 30)
     partLabel.Position = UDim2.new(0, 20, 0, yPos)
@@ -43,7 +43,7 @@ if Aimbot then
     partLabel.Parent = aimbotContent
     
     local partBtn = Instance.new("TextButton")
-    partBtn.Size = UDim2.new(0, 150, 0, 30)
+    partBtn.Size = UDim2.new(0, 200, 0, 30)
     partBtn.Position = UDim2.new(0, 200, 0, yPos)
     partBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
     partBtn.BorderSizePixel = 0
@@ -53,9 +53,21 @@ if Aimbot then
     partBtn.Font = Enum.Font.Gotham
     partBtn.Parent = aimbotContent
     
-    -- Menu de partes (R6 e R15)
-    local partsList = {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}
+    -- Lista de TODAS as partes do corpo
+    local partsList = {
+        "Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso",
+        "Left Arm", "Right Arm", "LeftUpperArm", "LeftLowerArm", "LeftHand",
+        "RightUpperArm", "RightLowerArm", "RightHand", "Left Leg", "Right Leg",
+        "LeftUpperLeg", "LeftLowerLeg", "LeftFoot", "RightUpperLeg",
+        "RightLowerLeg", "RightFoot"
+    }
     local partIndex = 1
+    for i, v in ipairs(partsList) do
+        if v == Aimbot.Settings.LockPart then
+            partIndex = i
+            break
+        end
+    end
     
     partBtn.MouseButton1Click:Connect(function()
         partIndex = partIndex + 1
@@ -65,69 +77,108 @@ if Aimbot then
     end)
     yPos = yPos + 40
     
-    -- TECLA DE ATALHO
+    -- MODO AUTOMÁTICO (gruda sem tecla)
+    createToggle(aimbotContent, "🤖 Modo Automático (gruda sozinho)", yPos,
+        function() return Aimbot.Settings.Auto end,
+        function(v) 
+            Aimbot.Settings.Auto = v
+            if v then
+                Aimbot.Settings.Toggle = false
+            end
+        end)
+    yPos = yPos + 45
+    
+    -- SISTEMA DE APRENDER TECLA
     local keyLabel = Instance.new("TextLabel")
     keyLabel.Size = UDim2.new(0, 200, 0, 30)
     keyLabel.Position = UDim2.new(0, 20, 0, yPos)
     keyLabel.BackgroundTransparency = 1
-    keyLabel.Text = "⌨️ Tecla para grudar:"
+    keyLabel.Text = "⌨️ Tecla atual:"
     keyLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     keyLabel.TextXAlignment = Enum.TextXAlignment.Left
     keyLabel.TextScaled = true
     keyLabel.Font = Enum.Font.Gotham
     keyLabel.Parent = aimbotContent
     
-    local keyBtn = Instance.new("TextButton")
-    keyBtn.Size = UDim2.new(0, 150, 0, 30)
-    keyBtn.Position = UDim2.new(0, 200, 0, yPos)
-    keyBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-    keyBtn.BorderSizePixel = 0
-    keyBtn.Text = Aimbot.Settings.TriggerKey
-    keyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    keyBtn.TextScaled = true
-    keyBtn.Font = Enum.Font.Gotham
-    keyBtn.Parent = aimbotContent
+    local keyDisplay = Instance.new("TextLabel")
+    keyDisplay.Size = UDim2.new(0, 100, 0, 30)
+    keyDisplay.Position = UDim2.new(0, 200, 0, yPos)
+    keyDisplay.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    keyDisplay.BorderSizePixel = 0
+    keyDisplay.Text = Aimbot.Settings.TriggerKey
+    keyDisplay.TextColor3 = Color3.fromRGB(255, 255, 0)
+    keyDisplay.TextScaled = true
+    keyDisplay.Font = Enum.Font.GothamBold
+    keyDisplay.Parent = aimbotContent
     
-    -- Lista de teclas possíveis
-    local keysList = {"MouseButton2", "MouseButton1", "V", "C", "X", "Z", "Q", "E", "R", "F", "G", "LeftShift", "LeftControl", "LeftAlt", "Space", "Tab"}
-    local keyIndex = 1
+    local learnBtn = Instance.new("TextButton")
+    learnBtn.Size = UDim2.new(0, 100, 0, 30)
+    learnBtn.Position = UDim2.new(0, 310, 0, yPos)
+    learnBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    learnBtn.BorderSizePixel = 0
+    learnBtn.Text = "Gravar"
+    learnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    learnBtn.TextScaled = true
+    learnBtn.Font = Enum.Font.Gotham
+    learnBtn.Parent = aimbotContent
     
-    keyBtn.MouseButton1Click:Connect(function()
-        keyIndex = keyIndex + 1
-        if keyIndex > #keysList then keyIndex = 1 end
-        Aimbot.Settings.TriggerKey = keysList[keyIndex]
-        keyBtn.Text = Aimbot.Settings.TriggerKey
+    learnBtn.MouseButton1Click:Connect(function()
+        Aimbot.Settings.Learning = true
+        learnBtn.Text = "Aperte uma tecla..."
+        learnBtn.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
+        
+        -- Timer para sair do modo aprendizado após 5 segundos
+        task.delay(5, function()
+            if Aimbot.Settings.Learning then
+                Aimbot.Settings.Learning = false
+                learnBtn.Text = "Gravar"
+                learnBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+            end
+        end)
+        
+        -- Atualiza o display quando a tecla for escolhida
+        local conn
+        conn = game:GetService("RunService").Stepped:Connect(function()
+            if not Aimbot.Settings.Learning then
+                keyDisplay.Text = Aimbot.Settings.TriggerKey
+                learnBtn.Text = "Gravar"
+                learnBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                conn:Disconnect()
+            end
+        end)
     end)
     yPos = yPos + 40
     
-    -- MODO DE ATIVAÇÃO (Toggle)
-    local toggleLabel = Instance.new("TextLabel")
-    toggleLabel.Size = UDim2.new(0, 200, 0, 30)
-    toggleLabel.Position = UDim2.new(0, 20, 0, yPos)
-    toggleLabel.BackgroundTransparency = 1
-    toggleLabel.Text = "🔄 Modo de ativação:"
-    toggleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    toggleLabel.TextScaled = true
-    toggleLabel.Font = Enum.Font.Gotham
-    toggleLabel.Parent = aimbotContent
-    
-    local toggleBtn = Instance.new("TextButton")
-    toggleBtn.Size = UDim2.new(0, 150, 0, 30)
-    toggleBtn.Position = UDim2.new(0, 200, 0, yPos)
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-    toggleBtn.BorderSizePixel = 0
-    toggleBtn.Text = Aimbot.Settings.Toggle and "Toggle (Apertar)" or "Hold (Segurar)"
-    toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleBtn.TextScaled = true
-    toggleBtn.Font = Enum.Font.Gotham
-    toggleBtn.Parent = aimbotContent
-    
-    toggleBtn.MouseButton1Click:Connect(function()
-        Aimbot.Settings.Toggle = not Aimbot.Settings.Toggle
+    -- MODO DE ATIVAÇÃO (Toggle/Hold) - só aparece se não for Auto
+    if not Aimbot.Settings.Auto then
+        local toggleLabel = Instance.new("TextLabel")
+        toggleLabel.Size = UDim2.new(0, 200, 0, 30)
+        toggleLabel.Position = UDim2.new(0, 20, 0, yPos)
+        toggleLabel.BackgroundTransparency = 1
+        toggleLabel.Text = "🔄 Modo de ativação:"
+        toggleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        toggleLabel.TextScaled = true
+        toggleLabel.Font = Enum.Font.Gotham
+        toggleLabel.Parent = aimbotContent
+        
+        local toggleBtn = Instance.new("TextButton")
+        toggleBtn.Size = UDim2.new(0, 200, 0, 30)
+        toggleBtn.Position = UDim2.new(0, 200, 0, yPos)
+        toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+        toggleBtn.BorderSizePixel = 0
         toggleBtn.Text = Aimbot.Settings.Toggle and "Toggle (Apertar)" or "Hold (Segurar)"
-    end)
-    yPos = yPos + 40
+        toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        toggleBtn.TextScaled = true
+        toggleBtn.Font = Enum.Font.Gotham
+        toggleBtn.Parent = aimbotContent
+        
+        toggleBtn.MouseButton1Click:Connect(function()
+            Aimbot.Settings.Toggle = not Aimbot.Settings.Toggle
+            toggleBtn.Text = Aimbot.Settings.Toggle and "Toggle (Apertar)" or "Hold (Segurar)"
+        end)
+        yPos = yPos + 40
+    end
     
     -- SEPARADOR
     local sep1 = Instance.new("Frame")
