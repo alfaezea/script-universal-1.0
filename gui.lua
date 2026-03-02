@@ -8,8 +8,7 @@
 ]]
 
 -- Carregar a biblioteca avançada (coloque aqui o código da biblioteca que você me mandou)
--- Como o código é muito grande, vou assumir que você já tem ela salva como "library.lua"
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/library.lua"))()
+local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)()
 
 -- ========== FUNÇÃO SEGURA PARA CARREGAR MÓDULOS ==========
 local function loadModule(url, name)
