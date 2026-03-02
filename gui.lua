@@ -1,7 +1,7 @@
 --[[
     ╔═══════════════════════════════════════════════════════════╗
     ║              AIRHUB PREMIUM - COMPLETE                    ║
-    ║         ESP (OTIMIZADO) | Aimbot | Diversos | Fly         ║
+    ║         ESP AVANÇADO | Aimbot | Diversos | Fly            ║
     ╚═══════════════════════════════════════════════════════════╝
 ]]
 
@@ -44,8 +44,8 @@ end
 -- ========== CARREGAR MÓDULOS ==========
 print("🔄 Carregando AirHub Premium...")
 
--- Carregar ESP OTIMIZADO (substitua pela sua URL)
-loadModule("https://raw.githubusercontent.com/SEU-USER/SEU-REPO/esp-otimizado.lua", "ESP")
+-- Carregar ESP AVANÇADO (substitua pela sua URL)
+loadModule("https://raw.githubusercontent.com/SEU-USER/SEU-REPO/esp-avancado.lua", "ESP")
 
 -- Carregar Aimbot
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
@@ -54,7 +54,7 @@ loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs
 task.wait(2)
 
 -- ========== OBTER REFERÊNCIAS ==========
-local ESP = getgenv().AirHub and getgenv().AirHub.WallHack_OTIMIZADO
+local ESP = getgenv().AirHub and getgenv().AirHub.ESP_Avancado
 local Aimbot = getgenv().AirHub and getgenv().AirHub.Aimbot
 
 -- ========== SISTEMA DE FLY EMBUTIDO ==========
@@ -126,8 +126,8 @@ ScreenGui.Parent = game:GetService("CoreGui")
 
 -- Frame principal
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 650, 0, 500)
-MainFrame.Position = UDim2.new(0.5, -325, 0.5, -250)
+MainFrame.Size = UDim2.new(0, 700, 0, 550)  -- Aumentado para comportar mais opções
+MainFrame.Position = UDim2.new(0.5, -350, 0.5, -275)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -151,7 +151,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 Title.BorderSizePixel = 0
-Title.Text = "AIRHUB PREMIUM"
+Title.Text = "AIRHUB PREMIUM - ESP AVANÇADO"
 Title.TextColor3 = Color3.fromRGB(255, 128, 0)
 Title.TextScaled = true
 Title.Font = Enum.Font.GothamBold
@@ -185,7 +185,7 @@ StatusBar.Parent = MainFrame
 
 local function createStatus(text, color, xPos)
     local status = Instance.new("TextLabel")
-    status.Size = UDim2.new(0, 150, 1, 0)
+    status.Size = UDim2.new(0, 160, 1, 0)
     status.Position = UDim2.new(0, xPos, 0, 0)
     status.BackgroundTransparency = 1
     status.Text = text
@@ -198,13 +198,13 @@ local function createStatus(text, color, xPos)
 end
 
 createStatus("ESP: " .. (ESP and "✅" or "❌"), ESP and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 10)
-createStatus("Aimbot: " .. (Aimbot and "✅" or "❌"), Aimbot and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 170)
-createStatus("Fly: ✅", Color3.fromRGB(0, 255, 0), 330)
-createStatus("Diversos: ✅", Color3.fromRGB(0, 255, 0), 490)
+createStatus("Aimbot: " .. (Aimbot and "✅" or "❌"), Aimbot and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0), 180)
+createStatus("Fly: ✅", Color3.fromRGB(0, 255, 0), 350)
+createStatus("Diversos: ✅", Color3.fromRGB(0, 255, 0), 520)
 
 -- Abas
 local TabContainer = Instance.new("Frame")
-TabContainer.Size = UDim2.new(1, -20, 0, 35)
+TabContainer.Size = UDim2.new(1, -20, 0, 40)
 TabContainer.Position = UDim2.new(0, 10, 0, 80)
 TabContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 TabContainer.BorderSizePixel = 0
@@ -214,8 +214,8 @@ local tabs = {}
 
 local function createTab(name, pos)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 100, 1, -10)
-    btn.Position = UDim2.new(0, 5 + (105 * (pos-1)), 0, 5)
+    btn.Size = UDim2.new(0, 120, 1, -10)
+    btn.Position = UDim2.new(0, 5 + (125 * (pos-1)), 0, 5)
     btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     btn.BorderSizePixel = 0
     btn.Text = name
@@ -229,8 +229,8 @@ end
 
 -- Container de conteúdo
 local ContentFrame = Instance.new("Frame")
-ContentFrame.Size = UDim2.new(1, -20, 1, -170)
-ContentFrame.Position = UDim2.new(0, 10, 0, 120)
+ContentFrame.Size = UDim2.new(1, -20, 1, -190)
+ContentFrame.Position = UDim2.new(0, 10, 0, 130)
 ContentFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 ContentFrame.BorderSizePixel = 0
 ContentFrame.Parent = MainFrame
@@ -245,7 +245,7 @@ local function createToggle(parent, text, yPos, getFunc, setFunc)
     bg.Parent = parent
     
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0, 200, 1, 0)
+    label.Size = UDim2.new(0, 250, 1, 0)
     label.Position = UDim2.new(0, 10, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = text
@@ -348,148 +348,316 @@ local function createSlider(parent, text, yPos, min, max, getFunc, setFunc, form
 end
 
 -- ========== CRIAR ABAS ==========
-local tabESP = createTab("ESP", 1)
-local tabAimbot = createTab("Aimbot", 2)
-local tabDiversos = createTab("Diversos", 3)
-local tabFly = createTab("Fly", 4)
+local tabESP = createTab("⚡ ESP AVANÇADO", 1)
+local tabAimbot = createTab("🎯 AIMBOT", 2)
+local tabDiversos = createTab("🔧 DIVERSOS", 3)
+local tabFly = createTab("✈️ FLY", 4)
 
--- ========== CONTEÚDO ESP (OTIMIZADO) ==========
+-- ========== CONTEÚDO ESP AVANÇADO ==========
 local espContent = Instance.new("ScrollingFrame")
 espContent.Size = UDim2.new(1, 0, 1, 0)
 espContent.BackgroundTransparency = 1
 espContent.BorderSizePixel = 0
 espContent.ScrollBarThickness = 5
-espContent.CanvasSize = UDim2.new(0, 0, 0, 500)
+espContent.CanvasSize = UDim2.new(0, 0, 0, 1200)
 espContent.Visible = false
 espContent.Parent = ContentFrame
 
 if ESP then
     local yPos = 10
     
-    -- Título
+    -- TÍTULO PRINCIPAL
     local titleESP = Instance.new("TextLabel")
-    titleESP.Size = UDim2.new(1, -20, 0, 30)
+    titleESP.Size = UDim2.new(1, -20, 0, 35)
     titleESP.Position = UDim2.new(0, 10, 0, yPos)
     titleESP.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
     titleESP.BorderSizePixel = 0
-    titleESP.Text = "⚡ ESP OTIMIZADO - LEVE ⚡"
+    titleESP.Text = "⚡ ESP AVANÇADO ULTRA OTIMIZADO ⚡"
     titleESP.TextColor3 = Color3.fromRGB(255, 255, 255)
     titleESP.TextScaled = true
     titleESP.Font = Enum.Font.GothamBold
     titleESP.Parent = espContent
-    yPos = yPos + 40
+    yPos = yPos + 45
     
-    -- Ativar ESP
-    createToggle(espContent, "Ativar ESP", yPos, 
+    -- ATIVAR ESP
+    createToggle(espContent, "🔘 ATIVAR ESP", yPos, 
         function() return ESP.Settings.Enabled end,
         function(v) ESP.Settings.Enabled = v end)
     yPos = yPos + 45
     
-    -- Separador Visual
-    local sep1 = Instance.new("TextLabel")
-    sep1.Size = UDim2.new(1, -20, 0, 20)
-    sep1.Position = UDim2.new(0, 10, 0, yPos)
-    sep1.BackgroundTransparency = 1
-    sep1.Text = "═══ ELEMENTOS VISUAIS ═══"
-    sep1.TextColor3 = Color3.fromRGB(255, 128, 0)
-    sep1.TextScaled = true
-    sep1.Font = Enum.Font.Gotham
-    sep1.Parent = espContent
-    yPos = yPos + 25
+    -- SEÇÃO 1: ELEMENTOS VISUAIS
+    local sec1 = Instance.new("TextLabel")
+    sec1.Size = UDim2.new(1, -20, 0, 25)
+    sec1.Position = UDim2.new(0, 10, 0, yPos)
+    sec1.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    sec1.BorderSizePixel = 0
+    sec1.Text = "   📦 ELEMENTOS VISUAIS"
+    sec1.TextColor3 = Color3.fromRGB(255, 200, 100)
+    sec1.TextXAlignment = Enum.TextXAlignment.Left
+    sec1.TextScaled = true
+    sec1.Font = Enum.Font.GothamBold
+    sec1.Parent = espContent
+    yPos = yPos + 30
     
-    -- Box
-    createToggle(espContent, "Box ESP", yPos,
+    createToggle(espContent, "📦 Box ESP", yPos,
         function() return ESP.Visuals.Box.Enabled end,
         function(v) ESP.Visuals.Box.Enabled = v end)
     yPos = yPos + 45
     
-    -- Tracers
-    createToggle(espContent, "Tracers", yPos,
+    createToggle(espContent, "📏 Tracers", yPos,
         function() return ESP.Visuals.Tracer.Enabled end,
         function(v) ESP.Visuals.Tracer.Enabled = v end)
     yPos = yPos + 45
     
-    -- Head Dot
-    createToggle(espContent, "Head Dot", yPos,
+    -- Tipo de Tracer
+    local tracerTypeLabel = Instance.new("TextLabel")
+    tracerTypeLabel.Size = UDim2.new(0, 200, 0, 30)
+    tracerTypeLabel.Position = UDim2.new(0, 20, 0, yPos)
+    tracerTypeLabel.BackgroundTransparency = 1
+    tracerTypeLabel.Text = "Tipo Tracer:"
+    tracerTypeLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tracerTypeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    tracerTypeLabel.TextScaled = true
+    tracerTypeLabel.Font = Enum.Font.Gotham
+    tracerTypeLabel.Parent = espContent
+    
+    local tracerTypeBtn = Instance.new("TextButton")
+    tracerTypeBtn.Size = UDim2.new(0, 100, 0, 25)
+    tracerTypeBtn.Position = UDim2.new(0, 200, 0, yPos + 2.5)
+    tracerTypeBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    tracerTypeBtn.BorderSizePixel = 0
+    tracerTypeBtn.Text = ESP.Visuals.Tracer.Type == 1 and "Bottom" or ESP.Visuals.Tracer.Type == 2 and "Center" or "Mouse"
+    tracerTypeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tracerTypeBtn.TextScaled = true
+    tracerTypeBtn.Font = Enum.Font.Gotham
+    tracerTypeBtn.Parent = espContent
+    
+    tracerTypeBtn.MouseButton1Click:Connect(function()
+        local current = ESP.Visuals.Tracer.Type
+        current = current + 1
+        if current > 3 then current = 1 end
+        ESP.Visuals.Tracer.Type = current
+        tracerTypeBtn.Text = current == 1 and "Bottom" or current == 2 and "Center" or "Mouse"
+    end)
+    yPos = yPos + 40
+    
+    createToggle(espContent, "⚫ Head Dot", yPos,
         function() return ESP.Visuals.HeadDot.Enabled end,
         function(v) ESP.Visuals.HeadDot.Enabled = v end)
     yPos = yPos + 45
     
-    -- Separador Info
-    local sep2 = Instance.new("TextLabel")
-    sep2.Size = UDim2.new(1, -20, 0, 20)
-    sep2.Position = UDim2.new(0, 10, 0, yPos)
-    sep2.BackgroundTransparency = 1
-    sep2.Text = "═══ INFORMAÇÕES ═══"
-    sep2.TextColor3 = Color3.fromRGB(255, 128, 0)
-    sep2.TextScaled = true
-    sep2.Font = Enum.Font.Gotham
-    sep2.Parent = espContent
-    yPos = yPos + 25
+    -- SEÇÃO 2: INFORMAÇÕES
+    local sec2 = Instance.new("TextLabel")
+    sec2.Size = UDim2.new(1, -20, 0, 25)
+    sec2.Position = UDim2.new(0, 10, 0, yPos)
+    sec2.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    sec2.BorderSizePixel = 0
+    sec2.Text = "   ℹ️ INFORMAÇÕES"
+    sec2.TextColor3 = Color3.fromRGB(100, 255, 100)
+    sec2.TextXAlignment = Enum.TextXAlignment.Left
+    sec2.TextScaled = true
+    sec2.Font = Enum.Font.GothamBold
+    sec2.Parent = espContent
+    yPos = yPos + 30
     
-    -- Mostrar Nomes
-    createToggle(espContent, "Mostrar Nomes", yPos,
+    createToggle(espContent, "👤 Mostrar Nomes", yPos,
         function() return ESP.Visuals.Name.Enabled end,
         function(v) ESP.Visuals.Name.Enabled = v end)
     yPos = yPos + 45
     
-    -- Mostrar Distância
-    createToggle(espContent, "Mostrar Distância", yPos,
+    createToggle(espContent, "📏 Mostrar Distância", yPos,
         function() return ESP.Visuals.Distance.Enabled end,
         function(v) ESP.Visuals.Distance.Enabled = v end)
     yPos = yPos + 45
     
-    -- Mostrar Vida
-    createToggle(espContent, "Mostrar Vida", yPos,
-        function() return ESP.Visuals.Health.Enabled end,
-        function(v) ESP.Visuals.Health.Enabled = v end)
+    createToggle(espContent, "❤️ Mostrar Vida (Texto)", yPos,
+        function() return ESP.Visuals.Health.Text end,
+        function(v) ESP.Visuals.Health.Text = v end)
     yPos = yPos + 45
     
-    -- Separador Checks
-    local sep3 = Instance.new("TextLabel")
-    sep3.Size = UDim2.new(1, -20, 0, 20)
-    sep3.Position = UDim2.new(0, 10, 0, yPos)
-    sep3.BackgroundTransparency = 1
-    sep3.Text = "═══ VERIFICAÇÕES ═══"
-    sep3.TextColor3 = Color3.fromRGB(255, 128, 0)
-    sep3.TextScaled = true
-    sep3.Font = Enum.Font.Gotham
-    sep3.Parent = espContent
-    yPos = yPos + 25
+    createToggle(espContent, "📊 Barra de Vida", yPos,
+        function() return ESP.Visuals.Health.Bar end,
+        function(v) ESP.Visuals.Health.Bar = v end)
+    yPos = yPos + 45
     
-    -- Team Check
-    createToggle(espContent, "Team Check", yPos,
+    createToggle(espContent, "🔫 Mostrar Arma", yPos,
+        function() return ESP.Visuals.Weapon.Enabled end,
+        function(v) ESP.Visuals.Weapon.Enabled = v end)
+    yPos = yPos + 45
+    
+    -- SEÇÃO 3: VERIFICAÇÕES
+    local sec3 = Instance.new("TextLabel")
+    sec3.Size = UDim2.new(1, -20, 0, 25)
+    sec3.Position = UDim2.new(0, 10, 0, yPos)
+    sec3.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    sec3.BorderSizePixel = 0
+    sec3.Text = "   🔒 VERIFICAÇÕES"
+    sec3.TextColor3 = Color3.fromRGB(255, 100, 100)
+    sec3.TextXAlignment = Enum.TextXAlignment.Left
+    sec3.TextScaled = true
+    sec3.Font = Enum.Font.GothamBold
+    sec3.Parent = espContent
+    yPos = yPos + 30
+    
+    createToggle(espContent, "👥 Team Check (Não mostrar aliados)", yPos,
         function() return ESP.Settings.TeamCheck end,
         function(v) ESP.Settings.TeamCheck = v end)
     yPos = yPos + 45
     
-    -- Alive Check
-    createToggle(espContent, "Alive Check", yPos,
+    createToggle(espContent, "💀 Alive Check (Só mostrar vivos)", yPos,
         function() return ESP.Settings.AliveCheck end,
         function(v) ESP.Settings.AliveCheck = v end)
     yPos = yPos + 45
     
-    -- Aviso de otimização
-    local warning = Instance.new("TextLabel")
-    warning.Size = UDim2.new(1, -20, 0, 40)
-    warning.Position = UDim2.new(0, 10, 0, yPos)
-    warning.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    warning.BorderSizePixel = 0
-    warning.Text = "⚡ Versão otimizada!\n90% menos lag"
-    warning.TextColor3 = Color3.fromRGB(0, 255, 0)
-    warning.TextWrapped = true
-    warning.TextScaled = true
-    warning.Font = Enum.Font.Gotham
-    warning.Parent = espContent
-    yPos = yPos + 50
+    -- SEÇÃO 4: OTIMIZAÇÃO
+    local sec4 = Instance.new("TextLabel")
+    sec4.Size = UDim2.new(1, -20, 0, 25)
+    sec4.Position = UDim2.new(0, 10, 0, yPos)
+    sec4.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    sec4.BorderSizePixel = 0
+    sec4.Text = "   ⚡ OTIMIZAÇÃO"
+    sec4.TextColor3 = Color3.fromRGB(255, 255, 0)
+    sec4.TextXAlignment = Enum.TextXAlignment.Left
+    sec4.TextScaled = true
+    sec4.Font = Enum.Font.GothamBold
+    sec4.Parent = espContent
+    yPos = yPos + 30
+    
+    -- Distância máxima
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Size = UDim2.new(0, 200, 0, 30)
+    distLabel.Position = UDim2.new(0, 20, 0, yPos)
+    distLabel.BackgroundTransparency = 1
+    distLabel.Text = "Distância Máxima: " .. (ESP.Settings.MaxDistance or 1000) .. "m"
+    distLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    distLabel.TextXAlignment = Enum.TextXAlignment.Left
+    distLabel.TextScaled = true
+    distLabel.Font = Enum.Font.Gotham
+    distLabel.Parent = espContent
+    
+    local distSlider = Instance.new("Frame")
+    distSlider.Size = UDim2.new(0, 200, 0, 10)
+    distSlider.Position = UDim2.new(0, 200, 0, yPos + 10)
+    distSlider.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    distSlider.BorderSizePixel = 0
+    distSlider.Parent = espContent
+    
+    local distFill = Instance.new("Frame")
+    distFill.Size = UDim2.new((ESP.Settings.MaxDistance or 1000) / 5000, 0, 1, 0)
+    distFill.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
+    distFill.BorderSizePixel = 0
+    distFill.Parent = distSlider
+    
+    local distDrag = Instance.new("TextButton")
+    distDrag.Size = UDim2.new(0, 15, 0, 15)
+    distDrag.Position = UDim2.new(distFill.Size.X.Scale, -7.5, 0.5, -7.5)
+    distDrag.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    distDrag.BorderSizePixel = 0
+    distDrag.Text = ""
+    distDrag.Parent = distSlider
+    
+    distDrag.MouseButton1Down:Connect(function()
+        local connection
+        connection = RunService.RenderStepped:Connect(function()
+            local mousePos = UserInputService:GetMouseLocation()
+            local sliderPos = distSlider.AbsolutePosition.X
+            local sliderSize = distSlider.AbsoluteSize.X
+            local relativePos = math.clamp(mousePos.X - sliderPos, 0, sliderSize)
+            local percent = relativePos / sliderSize
+            distFill.Size = UDim2.new(percent, 0, 1, 0)
+            distDrag.Position = UDim2.new(percent, -7.5, 0.5, -7.5)
+            
+            local value = math.floor(percent * 5000)
+            ESP.Settings.MaxDistance = value
+            distLabel.Text = "Distância Máxima: " .. value .. "m"
+        end)
+        
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                connection:Disconnect()
+            end
+        end)
+    end)
+    yPos = yPos + 40
+    
+    -- Render Every (controle de performance)
+    local renderLabel = Instance.new("TextLabel")
+    renderLabel.Size = UDim2.new(0, 200, 0, 30)
+    renderLabel.Position = UDim2.new(0, 20, 0, yPos)
+    renderLabel.BackgroundTransparency = 1
+    renderLabel.Text = "Render a cada " .. (ESP.Performance.RenderEvery or 2) .. " frames"
+    renderLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    renderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    renderLabel.TextScaled = true
+    renderLabel.Font = Enum.Font.Gotham
+    renderLabel.Parent = espContent
+    
+    local renderSlider = Instance.new("Frame")
+    renderSlider.Size = UDim2.new(0, 200, 0, 10)
+    renderSlider.Position = UDim2.new(0, 200, 0, yPos + 10)
+    renderSlider.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    renderSlider.BorderSizePixel = 0
+    renderSlider.Parent = espContent
+    
+    local renderFill = Instance.new("Frame")
+    renderFill.Size = UDim2.new(((ESP.Performance.RenderEvery or 2) - 1) / 4, 0, 1, 0)
+    renderFill.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
+    renderFill.BorderSizePixel = 0
+    renderFill.Parent = renderSlider
+    
+    local renderDrag = Instance.new("TextButton")
+    renderDrag.Size = UDim2.new(0, 15, 0, 15)
+    renderDrag.Position = UDim2.new(renderFill.Size.X.Scale, -7.5, 0.5, -7.5)
+    renderDrag.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    renderDrag.BorderSizePixel = 0
+    renderDrag.Text = ""
+    renderDrag.Parent = renderSlider
+    
+    renderDrag.MouseButton1Down:Connect(function()
+        local connection
+        connection = RunService.RenderStepped:Connect(function()
+            local mousePos = UserInputService:GetMouseLocation()
+            local sliderPos = renderSlider.AbsolutePosition.X
+            local sliderSize = renderSlider.AbsoluteSize.X
+            local relativePos = math.clamp(mousePos.X - sliderPos, 0, sliderSize)
+            local percent = relativePos / sliderSize
+            renderFill.Size = UDim2.new(percent, 0, 1, 0)
+            renderDrag.Position = UDim2.new(percent, -7.5, 0.5, -7.5)
+            
+            local value = math.floor(1 + (percent * 4))
+            ESP.Performance.RenderEvery = value
+            renderLabel.Text = "Render a cada " .. value .. " frames"
+        end)
+        
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                connection:Disconnect()
+            end
+        end)
+    end)
+    yPos = yPos + 45
+    
+    -- INFO DE OTIMIZAÇÃO
+    local infoBox = Instance.new("TextLabel")
+    infoBox.Size = UDim2.new(1, -20, 0, 60)
+    infoBox.Position = UDim2.new(0, 10, 0, yPos)
+    infoBox.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    infoBox.BorderSizePixel = 0
+    infoBox.Text = "⚡ OTIMIZAÇÕES ATIVAS:\n• Render a cada " .. (ESP.Performance.RenderEvery or 2) .. " frames\n• Distância máxima: " .. (ESP.Settings.MaxDistance or 1000) .. "m\n• Cache inteligente • Anti-lag"
+    infoBox.TextColor3 = Color3.fromRGB(0, 255, 0)
+    infoBox.TextWrapped = true
+    infoBox.TextScaled = true
+    infoBox.Font = Enum.Font.Gotham
+    infoBox.Parent = espContent
+    yPos = yPos + 70
     
     espContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 else
     local err = Instance.new("TextLabel")
-    err.Size = UDim2.new(1, 0, 0, 50)
+    err.Size = UDim2.new(1, 0, 0, 100)
     err.Position = UDim2.new(0, 0, 0, 20)
     err.BackgroundTransparency = 1
-    err.Text = "❌ ESP não carregado!\nVerifique a URL"
+    err.Text = "❌ ESP AVANÇADO NÃO CARREGADO!\n\nVerifique se:\n1. A URL do script está correta\n2. O script está hospedado no GitHub\n3. O nome do arquivo é 'esp-avancado.lua'"
     err.TextColor3 = Color3.fromRGB(255, 0, 0)
     err.TextWrapped = true
     err.TextScaled = true
@@ -497,7 +665,7 @@ else
     err.Parent = espContent
 end
 
--- ========== CONTEÚDO AIMBOT ==========
+-- ========== CONTEÚDO AIMBOT (mantido igual) ==========
 local aimbotContent = Instance.new("ScrollingFrame")
 aimbotContent.Size = UDim2.new(1, 0, 1, 0)
 aimbotContent.BackgroundTransparency = 1
@@ -568,7 +736,7 @@ else
     err.Parent = aimbotContent
 end
 
--- ========== CONTEÚDO DIVERSOS ==========
+-- ========== CONTEÚDO DIVERSOS (mantido igual) ==========
 local diversosContent = Instance.new("ScrollingFrame")
 diversosContent.Size = UDim2.new(1, 0, 1, 0)
 diversosContent.BackgroundTransparency = 1
@@ -580,7 +748,6 @@ diversosContent.Parent = ContentFrame
 
 local yPos = 10
 
--- Título
 local titleDiv = Instance.new("TextLabel")
 titleDiv.Size = UDim2.new(1, -20, 0, 30)
 titleDiv.Position = UDim2.new(0, 10, 0, yPos)
@@ -593,55 +760,40 @@ titleDiv.Font = Enum.Font.GothamBold
 titleDiv.Parent = diversosContent
 yPos = yPos + 40
 
--- Anti-Aim
 local antiAimToggle = createToggle(diversosContent, "Anti-Aim (Em breve)", yPos,
     function() return false end,
     function(v) 
-        if v then
-            print("🔄 Anti-Aim (Em desenvolvimento)")
-        end
+        if v then print("🔄 Anti-Aim (Em desenvolvimento)") end
     end)
 yPos = yPos + 45
 
--- No Clip
 local noClipToggle = createToggle(diversosContent, "No Clip (Em breve)", yPos,
     function() return false end,
     function(v)
-        if v then
-            print("🧱 No Clip (Em desenvolvimento)")
-        end
+        if v then print("🧱 No Clip (Em desenvolvimento)") end
     end)
 yPos = yPos + 45
 
--- Speed Hack
 local speedSlider = createSlider(diversosContent, "Speed Hack (Em breve)", yPos, 16, 100,
     function() return 16 end,
-    function(v)
-        print("⚡ Speed: " .. v .. " (Em desenvolvimento)")
-    end, "int")
+    function(v) print("⚡ Speed: " .. v .. " (Em desenvolvimento)") end, "int")
 yPos = yPos + 60
 
--- Jump Power
 local jumpSlider = createSlider(diversosContent, "Jump Power (Em breve)", yPos, 50, 200,
     function() return 50 end,
-    function(v)
-        print("🦘 Jump: " .. v .. " (Em desenvolvimento)")
-    end, "int")
+    function(v) print("🦘 Jump: " .. v .. " (Em desenvolvimento)") end, "int")
 yPos = yPos + 60
 
--- Infinito Jump
 local infJumpToggle = createToggle(diversosContent, "Infinito Jump (Em breve)", yPos,
     function() return false end,
     function(v)
-        if v then
-            print("🦘 Infinito Jump (Em desenvolvimento)")
-        end
+        if v then print("🦘 Infinito Jump (Em desenvolvimento)") end
     end)
 yPos = yPos + 45
 
 diversosContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
 
--- ========== CONTEÚDO FLY ==========
+-- ========== CONTEÚDO FLY (mantido igual) ==========
 local flyContent = Instance.new("Frame")
 flyContent.Size = UDim2.new(1, 0, 1, 0)
 flyContent.BackgroundTransparency = 1
@@ -716,4 +868,5 @@ espContent.Visible = true
 tabESP.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
 
 print("✅ AirHub Premium carregado com sucesso!")
-print("📌 ESP OTIMIZADO - 90% mais leve!")
+print("📌 ESP AVANÇADO - Todas as features!")
+print("⚡ Otimizações: Render seletivo | Cache | Anti-lag")
