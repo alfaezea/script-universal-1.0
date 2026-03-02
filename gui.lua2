@@ -27,6 +27,11 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/Mo
 
 --// Variables
 
+local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
+local Aimbot, WallHack = getgenv().AirHub.Aimbot, getgenv().AirHub.WallHack
+local Hitbox = getgenv().LimbExtender -- Hitbox module
+local Parts, Fonts, TracersType = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}, {"UI", "System", "Plex", "Monospace"}, {"Bottom", "Center", "Mouse"}
+
 -- ========== SISTEMA DE FLY SIMPLES ==========
 local Fly = {
     Enabled = false,
@@ -92,11 +97,6 @@ local function ToggleFly(state)
         print("❌ Fly DESATIVADO")
     end
 end
-
-local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
-local Aimbot, WallHack = getgenv().AirHub.Aimbot, getgenv().AirHub.WallHack
-local Hitbox = getgenv().LimbExtender -- Hitbox module
-local Parts, Fonts, TracersType = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}, {"UI", "System", "Plex", "Monospace"}, {"Bottom", "Center", "Mouse"}
 
 -- ========== CONFIGURAÇÕES DA HITBOX ==========
 local HitboxSettings = {
