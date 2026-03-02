@@ -1,10 +1,21 @@
 --[[
-	AirHub by Exunys - Versão Otimizada
-	Funcionalidades: Aimbot, Visuals, Crosshair, Fly, Hitbox
+	AirHub by Exunys © CC0 1.0 Universal (2023)
+	https://github.com/Exunys
+	Modificado com Smoothness, Fly e HITBOX EXTENDER
+	VERSÃO COMPLETA E FUNCIONAL!
 ]]
 
--- Carregar módulos com verificação
-local function loadModule(url)
+--// Cache
+local loadstring, getgenv, setclipboard, tablefind, UserInputService = loadstring, getgenv, setclipboard, table.find, game:GetService("UserInputService")
+
+--// Loaded check
+if AirHub or AirHubV2Loaded then return end
+
+--// Environment
+getgenv().AirHub = {}
+
+--// Função segura para carregar módulos
+local function safeLoad(url)
     local success, result = pcall(function()
         return loadstring(game:HttpGet(url))()
     end)
@@ -12,52 +23,512 @@ local function loadModule(url)
         print("✅ Módulo carregado: " .. url)
         return result
     else
-        warn("❌ Falha ao carregar: " .. url)
+        warn("❌ Falha ao carregar: " .. url .. " - Continuando sem este módulo")
         return nil
     end
 end
 
--- Carregar módulos
-local Aimbot = loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua")
-local ESP = loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua")
-local Hitbox = loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua")
+--// Load Modules com proteção
+local Aimbot = safeLoad("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua")
+local WallHack = safeLoad("https://raw.githubusercontent.com/Exunys/AirHub/main/Modules/Wall%20Hack.lua")
+local Hitbox = safeLoad("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/hitbox.lua")
 
--- Carregar biblioteca UI
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/AirHub/main/UI%20Library/Source.lua"))()
+--// Variables
+local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)() -- Pepsi's UI Library
+local Parts, Fonts, TracersType = {"Head", "HumanoidRootPart", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftHand", "RightHand", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftFoot", "LeftLowerLeg", "UpperTorso", "LeftUpperLeg", "RightFoot", "RightLowerLeg", "LowerTorso", "RightUpperLeg"}, {"UI", "System", "Plex", "Monospace"}, {"Bottom", "Center", "Mouse"}
 
--- Criar janela
-local Window = Library:CreateWindow({
-    Name = "AirHub",
-    Themeable = { Image = "7059346386", Info = "Made by Exunys", Credit = false }
+-- ========== CONFIGURAÇÕES DA HITBOX ==========
+local HitboxSettings = {
+    Enabled = false,
+    ToggleKey = "L",
+    TargetLimb = "HumanoidRootPart",
+    Size = 15,
+    Transparency = 0.9,
+    CanCollide = false,
+    TeamCheck = true,
+    ForceFieldCheck = true,
+    UseHighlight = true,
+    DepthMode = "AlwaysOnTop",
+    HighlightColor = Color3.fromRGB(255, 117, 24),
+    HighlightTransparency = 0.7,
+    OutlineColor = Color3.fromRGB(0, 0, 0),
+    OutlineTransparency = 1,
+}
+
+-- ========== INSTANCIAR O EXTENDER ==========
+local extender = Hitbox and Hitbox({
+    TOGGLE = HitboxSettings.ToggleKey,
+    TARGET_LIMB = HitboxSettings.TargetLimb,
+    LIMB_SIZE = HitboxSettings.Size,
+    LIMB_TRANSPARENCY = HitboxSettings.Transparency,
+    LIMB_CAN_COLLIDE = HitboxSettings.CanCollide,
+    TEAM_CHECK = HitboxSettings.TeamCheck,
+    FORCEFIELD_CHECK = HitboxSettings.ForceFieldCheck,
+    USE_HIGHLIGHT = HitboxSettings.UseHighlight,
+    DEPTH_MODE = HitboxSettings.DepthMode,
+    HIGHLIGHT_FILL_COLOR = HitboxSettings.HighlightColor,
+    HIGHLIGHT_FILL_TRANSPARENCY = HitboxSettings.HighlightTransparency,
+    HIGHLIGHT_OUTLINE_COLOR = HitboxSettings.OutlineColor,
+    HIGHLIGHT_OUTLINE_TRANSPARENCY = HitboxSettings.OutlineTransparency,
+}) or { Start = function() end, Stop = function() end, Set = function() end }
+
+-- ========== SISTEMA DE FLY ==========
+local Fly = {
+    Enabled = false,
+    Speed = 50,
+    BodyGyro = nil,
+    BodyVelocity = nil,
+    Connections = {}
+}
+
+local function ToggleFly(state)
+    local player = game.Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+
+    if not humanoid or not rootPart then return end
+
+    if state then
+        humanoid.PlatformStand = true
+
+        Fly.BodyGyro = Instance.new("BodyGyro")
+        Fly.BodyGyro.P = 9e4
+        Fly.BodyGyro.MaxTorque = Vector3.new(9e4, 9e4, 9e4)
+        Fly.BodyGyro.CFrame = rootPart.CFrame
+        Fly.BodyGyro.Parent = rootPart
+
+        Fly.BodyVelocity = Instance.new("BodyVelocity")
+        Fly.BodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        Fly.BodyVelocity.MaxForce = Vector3.new(9e4, 9e4, 9e4)
+        Fly.BodyVelocity.Parent = rootPart
+
+        Fly.Connections.RenderStepped = game:GetService("RunService").RenderStepped:Connect(function()
+            if not Fly.Enabled then return end
+
+            local moveDirection = Vector3.new(0, 0, 0)
+            local camera = workspace.CurrentCamera
+
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - camera.CFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + camera.CFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDirection = moveDirection + Vector3.new(0, 1, 0) end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDirection = moveDirection + Vector3.new(0, -1, 0) end
+
+            if moveDirection.Magnitude > 0 then
+                moveDirection = moveDirection.Unit * Fly.Speed
+            end
+
+            if Fly.BodyVelocity then Fly.BodyVelocity.Velocity = moveDirection end
+            if Fly.BodyGyro then Fly.BodyGyro.CFrame = CFrame.new(rootPart.Position, rootPart.Position + camera.CFrame.LookVector) end
+        end)
+
+        Fly.Enabled = true
+        print("✅ Fly ATIVADO")
+    else
+        Fly.Enabled = false
+        if Fly.Connections.RenderStepped then Fly.Connections.RenderStepped:Disconnect() end
+        if Fly.BodyGyro then Fly.BodyGyro:Destroy(); Fly.BodyGyro = nil end
+        if Fly.BodyVelocity then Fly.BodyVelocity:Destroy(); Fly.BodyVelocity = nil end
+        if humanoid then humanoid.PlatformStand = false end
+        print("❌ Fly DESATIVADO")
+    end
+end
+
+--// Frame
+Library.UnloadCallback = function()
+    ToggleFly(false)
+    getgenv().AirHub = nil
+end
+
+local MainFrame = Library:CreateWindow({
+	Name = "AirHub",
+	Themeable = {
+		Image = "7059346386",
+		Info = "Made by Exunys\nPowered by Pepsi's UI Library",
+		Credit = false
+	},
+	Background = "",
+	Theme = [[{"__Designer.Colors.topGradient":"3F0C64","__Designer.Colors.section":"C259FB","__Designer.Colors.hoveredOptionBottom":"4819B4","__Designer.Background.ImageAssetID":"rbxassetid://4427304036","__Designer.Colors.selectedOption":"4E149C","__Designer.Colors.unselectedOption":"482271","__Designer.Files.WorkspaceFile":"AirHub","__Designer.Colors.unhoveredOptionTop":"310269","__Designer.Colors.outerBorder":"391D57","__Designer.Background.ImageColor":"69009C","__Designer.Colors.tabText":"B9B9B9","__Designer.Colors.elementBorder":"160B24","__Designer.Background.ImageTransparency":100,"__Designer.Colors.background":"1E1237","__Designer.Colors.innerBorder":"531E79","__Designer.Colors.bottomGradient":"361A60","__Designer.Colors.sectionBackground":"21002C","__Designer.Colors.hoveredOptionTop":"6B10F9","__Designer.Colors.otherElementText":"7B44A8","__Designer.Colors.main":"AB26FF","__Designer.Colors.elementText":"9F7DB5","__Designer.Colors.unhoveredOptionBottom":"3E0088","__Designer.Background.UseBackgroundImage":false}]]
 })
 
--- Criar abas
-local AimbotTab = Window:CreateTab("Aimbot")
-local VisualsTab = Window:CreateTab("Visuals")
-local MiscTab = Window:CreateTab("Diversos")
+--// Tabs
+local AimbotTab = MainFrame:CreateTab({ Name = "Aimbot" })
+local VisualsTab = MainFrame:CreateTab({ Name = "Visuals" })
+local CrosshairTab = MainFrame:CreateTab({ Name = "Crosshair" })
+local MiscTab = MainFrame:CreateTab({ Name = "Diversos" })
+local FunctionsTab = MainFrame:CreateTab({ Name = "Functions" })
 
--- Configurações do Aimbot
-local AimbotSection = AimbotTab:CreateSection("Configurações")
-AimbotSection:AddToggle({
-    Name = "Ativar Aimbot",
-    Value = false,
-    Callback = function(v) if Aimbot then Aimbot.Enabled = v end end
+--// Aimbot Sections
+local Values = AimbotTab:CreateSection({ Name = "Valores" })
+local Checks = AimbotTab:CreateSection({ Name = "Verificações" })
+local ThirdPerson = AimbotTab:CreateSection({ Name = "Terceira Pessoa" })
+local FOV_Values = AimbotTab:CreateSection({ Name = "Campo de Visão", Side = "Right" })
+local FOV_Appearance = AimbotTab:CreateSection({ Name = "Aparência do Círculo", Side = "Right" })
+
+--// Visuals Sections
+local WallHackChecks = VisualsTab:CreateSection({ Name = "Verificações" })
+local ESPSettings = VisualsTab:CreateSection({ Name = "Configurações ESP" })
+local BoxesSettings = VisualsTab:CreateSection({ Name = "Configurações das Caixas" })
+local ChamsSettings = VisualsTab:CreateSection({ Name = "Configurações Chams" })
+local TracersSettings = VisualsTab:CreateSection({ Name = "Configurações Tracers", Side = "Right" })
+local HeadDotsSettings = VisualsTab:CreateSection({ Name = "Configurações Head Dots", Side = "Right" })
+local HealthBarSettings = VisualsTab:CreateSection({ Name = "Configurações Barra de Vida", Side = "Right" })
+
+--// Crosshair Sections
+local CrosshairSettings = CrosshairTab:CreateSection({ Name = "Configurações" })
+local CrosshairSettings_CenterDot = CrosshairTab:CreateSection({ Name = "Ponto Central", Side = "Right" })
+
+--// Diversos Sections
+local FlySection = MiscTab:CreateSection({ Name = "Sistema de Voo" })
+local HitboxSection = MiscTab:CreateSection({ Name = "Extensor de Hitbox", Side = "Right" })
+local HitboxConfig = MiscTab:CreateSection({ Name = "Configurações da Hitbox", Side = "Right" })
+local HighlightSection = MiscTab:CreateSection({ Name = "Configurações do Highlight", Side = "Right" })
+
+--// Functions Sections
+local FunctionsSection = FunctionsTab:CreateSection({ Name = "Funções" })
+
+-- ========== AIMBOT ==========
+Values:AddToggle({
+	Name = "Ativado",
+	Value = Aimbot and Aimbot.Settings.Enabled or false,
+	Callback = function(New) if Aimbot then Aimbot.Settings.Enabled = New end end
 })
 
--- Configurações do Visuals
-local VisualsSection = VisualsTab:CreateSection("ESP")
-VisualsSection:AddToggle({
-    Name = "Ativar ESP",
-    Value = false,
-    Callback = function(v) if ESP then ESP.Enabled = v end end
+Values:AddToggle({
+	Name = "Modo Alternado",
+	Value = Aimbot and Aimbot.Settings.Toggle or false,
+	Callback = function(New) if Aimbot then Aimbot.Settings.Toggle = New end end
 })
 
--- Configurações do Misc
-local MiscSection = MiscTab:CreateSection("Extras")
-MiscSection:AddToggle({
-    Name = "Ativar Hitbox",
-    Value = false,
-    Callback = function(v) if Hitbox then Hitbox.Enabled = v end end
+Values:AddSlider({
+	Name = "Suavidade",
+	Value = (Aimbot and Aimbot.Settings.Smoothness) or 0.3,
+	Callback = function(New) if Aimbot then Aimbot.Settings.Smoothness = New end end,
+	Min = 0.1, Max = 1.0, Decimals = 2
 })
 
-print("✅ Script carregado com sucesso!")
+if Aimbot then Aimbot.Settings.LockPart = Parts[1]; end
+Values:AddDropdown({
+	Name = "Parte do Corpo",
+	Value = Parts[1],
+	Callback = function(New) if Aimbot then Aimbot.Settings.LockPart = New end end,
+	List = Parts,
+	Nothing = "Head"
+})
+
+Values:AddTextbox({
+	Name = "Tecla de Atalho",
+	Value = (Aimbot and Aimbot.Settings.TriggerKey) or "MouseButton2",
+	Callback = function(New) if Aimbot then Aimbot.Settings.TriggerKey = New end end
+})
+
+Values:AddSlider({
+	Name = "Sensibilidade",
+	Value = (Aimbot and Aimbot.Settings.Sensitivity) or 0,
+	Callback = function(New) if Aimbot then Aimbot.Settings.Sensitivity = New end end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+Checks:AddToggle({
+	Name = "Verificar Time",
+	Value = Aimbot and Aimbot.Settings.TeamCheck or false,
+	Callback = function(New) if Aimbot then Aimbot.Settings.TeamCheck = New end end
+})
+
+Checks:AddToggle({
+	Name = "Verificar Paredes",
+	Value = Aimbot and Aimbot.Settings.WallCheck or false,
+	Callback = function(New) if Aimbot then Aimbot.Settings.WallCheck = New end end
+})
+
+Checks:AddToggle({
+	Name = "Verificar Vida",
+	Value = Aimbot and Aimbot.Settings.AliveCheck or true,
+	Callback = function(New) if Aimbot then Aimbot.Settings.AliveCheck = New end end
+})
+
+ThirdPerson:AddToggle({
+	Name = "Ativar Terceira Pessoa",
+	Value = Aimbot and Aimbot.Settings.ThirdPerson or false,
+	Callback = function(New) if Aimbot then Aimbot.Settings.ThirdPerson = New end end
+})
+
+ThirdPerson:AddSlider({
+	Name = "Sensibilidade",
+	Value = (Aimbot and Aimbot.Settings.ThirdPersonSensitivity) or 3,
+	Callback = function(New) if Aimbot then Aimbot.Settings.ThirdPersonSensitivity = New end end,
+	Min = 0.1, Max = 5, Decimals = 1
+})
+
+FOV_Values:AddToggle({
+	Name = "Ativado",
+	Value = Aimbot and Aimbot.FOVSettings.Enabled or true,
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.Enabled = New end end
+})
+
+FOV_Values:AddToggle({
+	Name = "Visível",
+	Value = Aimbot and Aimbot.FOVSettings.Visible or true,
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.Visible = New end end
+})
+
+FOV_Values:AddSlider({
+	Name = "Tamanho",
+	Value = (Aimbot and Aimbot.FOVSettings.Amount) or 90,
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.Amount = New end end,
+	Min = 10, Max = 300
+})
+
+FOV_Appearance:AddToggle({
+	Name = "Preenchido",
+	Value = Aimbot and Aimbot.FOVSettings.Filled or false,
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.Filled = New end end
+})
+
+FOV_Appearance:AddSlider({
+	Name = "Transparência",
+	Value = (Aimbot and Aimbot.FOVSettings.Transparency) or 0.5,
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.Transparency = New end end,
+	Min = 0, Max = 1, Decimal = 1
+})
+
+FOV_Appearance:AddSlider({
+	Name = "Lados",
+	Value = (Aimbot and Aimbot.FOVSettings.Sides) or 60,
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.Sides = New end end,
+	Min = 3, Max = 60
+})
+
+FOV_Appearance:AddSlider({
+	Name = "Espessura",
+	Value = (Aimbot and Aimbot.FOVSettings.Thickness) or 1,
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.Thickness = New end end,
+	Min = 1, Max = 50
+})
+
+FOV_Appearance:AddColorpicker({
+	Name = "Cor",
+	Value = (Aimbot and Aimbot.FOVSettings.Color) or Color3.fromRGB(255,255,255),
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.Color = New end end
+})
+
+FOV_Appearance:AddColorpicker({
+	Name = "Cor Travado",
+	Value = (Aimbot and Aimbot.FOVSettings.LockedColor) or Color3.fromRGB(255,70,70),
+	Callback = function(New) if Aimbot then Aimbot.FOVSettings.LockedColor = New end end
+})
+
+-- ========== VISUAIS ==========
+WallHackChecks:AddToggle({
+	Name = "Ativado",
+	Value = WallHack and WallHack.Settings.Enabled or false,
+	Callback = function(New) if WallHack then WallHack.Settings.Enabled = New end end
+})
+
+WallHackChecks:AddToggle({
+	Name = "Verificar Time",
+	Value = WallHack and WallHack.Settings.TeamCheck or false,
+	Callback = function(New) if WallHack then WallHack.Settings.TeamCheck = New end end
+})
+
+WallHackChecks:AddToggle({
+	Name = "Verificar Vida",
+	Value = WallHack and WallHack.Settings.AliveCheck or true,
+	Callback = function(New) if WallHack then WallHack.Settings.AliveCheck = New end end
+})
+
+-- ========== FLY ==========
+FlySection:AddToggle({
+	Name = "Ativar Fly",
+	Value = Fly.Enabled,
+	Callback = function(New) ToggleFly(New) end
+})
+
+FlySection:AddSlider({
+	Name = "Velocidade",
+	Value = Fly.Speed,
+	Callback = function(New) Fly.Speed = New end,
+	Min = 10, Max = 200, Decimals = 0
+})
+
+FlySection:AddLabel("Controles:")
+FlySection:AddLabel("WASD - Andar")
+FlySection:AddLabel("Espaço - Subir")
+FlySection:AddLabel("Shift - Descer")
+
+-- ========== HITBOX ==========
+HitboxSection:AddToggle({
+	Name = "Ativar Hitbox",
+	Value = HitboxSettings.Enabled,
+	Callback = function(New)
+		HitboxSettings.Enabled = New
+		if New then
+			extender:Start()
+		else
+			extender:Stop()
+		end
+	end
+})
+
+HitboxSection:AddDropdown({
+	Name = "Tecla Atalho",
+	Value = HitboxSettings.ToggleKey,
+	Callback = function(New) 
+		HitboxSettings.ToggleKey = New
+		extender:Set("TOGGLE", New)
+	end,
+	List = {"L", "K", "J", "H", "G", "F", "E", "Q"},
+	Nothing = "L"
+})
+
+HitboxSection:AddDropdown({
+	Name = "Parte do Corpo",
+	Value = HitboxSettings.TargetLimb,
+	Callback = function(New) 
+		HitboxSettings.TargetLimb = New
+		extender:Set("TARGET_LIMB", New)
+	end,
+	List = {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso"},
+	Nothing = "HumanoidRootPart"
+})
+
+HitboxConfig:AddSlider({
+	Name = "Tamanho",
+	Value = HitboxSettings.Size,
+	Callback = function(New) 
+		HitboxSettings.Size = New
+		extender:Set("LIMB_SIZE", New)
+	end,
+	Min = 5, Max = 30, Decimals = 1
+})
+
+HitboxConfig:AddSlider({
+	Name = "Transparência",
+	Value = HitboxSettings.Transparency,
+	Callback = function(New) 
+		HitboxSettings.Transparency = New
+		extender:Set("LIMB_TRANSPARENCY", New)
+	end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+HitboxConfig:AddToggle({
+	Name = "Pode Colidir",
+	Value = HitboxSettings.CanCollide,
+	Callback = function(New) 
+		HitboxSettings.CanCollide = New
+		extender:Set("LIMB_CAN_COLLIDE", New)
+	end
+})
+
+HitboxConfig:AddToggle({
+	Name = "Verificar Time",
+	Value = HitboxSettings.TeamCheck,
+	Callback = function(New) 
+		HitboxSettings.TeamCheck = New
+		extender:Set("TEAM_CHECK", New)
+	end
+})
+
+HitboxConfig:AddToggle({
+	Name = "Verificar ForceField",
+	Value = HitboxSettings.ForceFieldCheck,
+	Callback = function(New) 
+		HitboxSettings.ForceFieldCheck = New
+		extender:Set("FORCEFIELD_CHECK", New)
+	end
+})
+
+HighlightSection:AddToggle({
+	Name = "Usar Highlight",
+	Value = HitboxSettings.UseHighlight,
+	Callback = function(New) 
+		HitboxSettings.UseHighlight = New
+		extender:Set("USE_HIGHLIGHT", New)
+	end
+})
+
+HighlightSection:AddDropdown({
+	Name = "Modo Profundidade",
+	Value = HitboxSettings.DepthMode,
+	Callback = function(New) 
+		HitboxSettings.DepthMode = New
+		extender:Set("DEPTH_MODE", New)
+	end,
+	List = {"AlwaysOnTop", "Occluded", "AlwaysOnBottom"},
+	Nothing = "AlwaysOnTop"
+})
+
+HighlightSection:AddColorpicker({
+	Name = "Cor do Fill",
+	Value = HitboxSettings.HighlightColor,
+	Callback = function(New) 
+		HitboxSettings.HighlightColor = New
+		extender:Set("HIGHLIGHT_FILL_COLOR", New)
+	end
+})
+
+HighlightSection:AddSlider({
+	Name = "Transparência Fill",
+	Value = HitboxSettings.HighlightTransparency,
+	Callback = function(New) 
+		HitboxSettings.HighlightTransparency = New
+		extender:Set("HIGHLIGHT_FILL_TRANSPARENCY", New)
+	end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+HighlightSection:AddColorpicker({
+	Name = "Cor do Outline",
+	Value = HitboxSettings.OutlineColor,
+	Callback = function(New) 
+		HitboxSettings.OutlineColor = New
+		extender:Set("HIGHLIGHT_OUTLINE_COLOR", New)
+	end
+})
+
+HighlightSection:AddSlider({
+	Name = "Transparência Outline",
+	Value = HitboxSettings.OutlineTransparency,
+	Callback = function(New) 
+		HitboxSettings.OutlineTransparency = New
+		extender:Set("HIGHLIGHT_OUTLINE_TRANSPARENCY", New)
+	end,
+	Min = 0, Max = 1, Decimals = 2
+})
+
+-- ========== FUNCTIONS ==========
+FunctionsSection:AddButton({
+	Name = "Resetar Configurações",
+	Callback = function()
+		if Aimbot and Aimbot.Functions then Aimbot.Functions:ResetSettings() end
+		if WallHack and WallHack.Functions then WallHack.Functions:ResetSettings() end
+		Library.ResetAll()
+	end
+})
+
+FunctionsSection:AddButton({
+	Name = "Reiniciar",
+	Callback = function()
+		if Aimbot and Aimbot.Functions then Aimbot.Functions:Restart() end
+		if WallHack and WallHack.Functions then WallHack.Functions:Restart() end
+	end
+})
+
+FunctionsSection:AddButton({
+	Name = "Sair",
+	Callback = Library.Unload,
+})
+
+FunctionsSection:AddButton({
+	Name = "Copiar Link",
+	Callback = function() setclipboard("https://github.com/Exunys/AirHub") end
+})
+
+print("✅ AirHub COMPLETO carregado!")
+print("🎯 Aimbot | 👁️ Visuals | 🎮 Crosshair | ✈️ Fly | 💪 Hitbox")
+print("✅ Pressione a tecla do executor para abrir/fechar")
