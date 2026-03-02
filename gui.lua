@@ -45,7 +45,7 @@ end
 print("🔄 Carregando AirHub Premium...")
 
 -- Carregar ESP AVANÇADO (substitua pela sua URL)
-loadModule("https://raw.githubusercontent.com/SEU-USER/SEU-REPO/esp-avancado.lua", "ESP")
+loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/esp.lua", "ESP")
 
 -- Carregar Aimbot
 loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
