@@ -2,13 +2,8 @@
     ╔═══════════════════════════════════════════════════════════╗
     ║              PREMIUM HUB - AIRHUB EDITION                 ║
     ║                    By: DeepSeek AI                        ║
-    ║                                                           ║
-    ║  🎯 Aimbot | 👁️ ESP | 🎮 Crosshair | ✈️ Fly | 💪 Hitbox  ║
     ╚═══════════════════════════════════════════════════════════╝
 ]]
-
--- Carregar a biblioteca avançada (coloque aqui o código da biblioteca que você me mandou)
-local Library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)()
 
 -- ========== FUNÇÃO SEGURA PARA CARREGAR MÓDULOS ==========
 local function loadModule(url, name)
@@ -19,11 +14,16 @@ local function loadModule(url, name)
     if success and result and #result > 0 then
         local func, err = loadstring(result)
         if func then
-            func()
-            print("✅ " .. name .. " carregado com sucesso!")
-            return true
+            local success2, result2 = pcall(func)
+            if success2 then
+                print("✅ " .. name .. " carregado com sucesso!")
+                return true
+            else
+                warn("❌ Erro ao executar " .. name .. ": " .. tostring(result2))
+                return false
+            end
         else
-            warn("❌ Erro de sintaxe em " .. name)
+            warn("❌ Erro de sintaxe em " .. name .. ": " .. tostring(err))
             return false
         end
     else
@@ -51,6 +51,13 @@ local Hitbox = getgenv().LimbExtender
 print("🔍 Aimbot:", Aimbot and "✅" or "❌")
 print("🔍 ESP:", ESP and "✅" or "❌")
 print("🔍 Hitbox:", Hitbox and "✅" or "❌")
+
+-- Se nenhum módulo carregou, mostrar erro
+if not Aimbot and not ESP and not Hitbox then
+    warn("❌ NENHUM MÓDULO FOI CARREGADO!")
+    warn("Verifique se as URLs estão corretas e os scripts existem")
+    return
+end
 
 -- ========== SISTEMA DE FLY (EMBUTIDO) ==========
 local Fly = {
@@ -118,450 +125,171 @@ local function ToggleFly(state)
     end
 end
 
--- ========== CONFIGURAÇÕES DA HITBOX ==========
-local HitboxSettings = {
-    Enabled = false,
-    ToggleKey = "L",
-    TargetLimb = "HumanoidRootPart",
-    Size = 15,
-    Transparency = 0.9,
-    CanCollide = false,
-    TeamCheck = true,
-    ForceFieldCheck = true,
-    UseHighlight = true,
-    DepthMode = "AlwaysOnTop",
-    HighlightColor = Color3.fromRGB(255, 117, 24),
-    HighlightTransparency = 0.7,
-    OutlineColor = Color3.fromRGB(0, 0, 0),
-    OutlineTransparency = 1,
-}
+-- ========== SISTEMA SIMPLES DE GUI (SEM BIBLIOTECA) ==========
+-- Criando uma GUI simples manualmente já que não temos a library
 
--- ========== INSTANCIAR HITBOX ==========
-local extender = Hitbox and Hitbox(HitboxSettings) or { Start = function() end, Stop = function() end, Set = function() end }
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AirHubPremium"
+ScreenGui.Parent = game:GetService("CoreGui")
 
--- ========== CRIAR GUI PRINCIPAL ==========
-local Window = Library:Load({
-    name = "AirHub Premium",
-    sizex = 600,
-    sizey = 550,
-    theme = "AirHub",
-    folder = "AirHubPremium",
-    extension = "cfg"
-})
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 600, 0, 550)
+MainFrame.Position = UDim2.new(0.5, -300, 0.5, -275)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+MainFrame.BackgroundTransparency = 0.1
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
--- ========== CRIAR ABAS ==========
-local MainTab, Signal = Window:Tab("Principal")
-local AimbotTab = Window:Tab("Aimbot")
-local ESPTab = Window:Tab("ESP")
-local MiscTab = Window:Tab("Diversos")
-local ConfigTab = Window:Tab("Configurações")
+-- Título
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Title.BorderSizePixel = 0
+Title.Text = "AirHub Premium"
+Title.TextColor3 = Color3.fromRGB(255, 117, 24)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+Title.Parent = MainFrame
 
--- Ativar primeira aba
-if Signal then Signal:Fire() end
+-- Status dos módulos
+local StatusFrame = Instance.new("Frame")
+StatusFrame.Size = UDim2.new(1, -20, 0, 80)
+StatusFrame.Position = UDim2.new(0, 10, 0, 50)
+StatusFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+StatusFrame.BorderSizePixel = 0
+StatusFrame.Parent = MainFrame
 
--- ========== ABA PRINCIPAL ==========
-local GeneralSection = MainTab:Section({ name = "Visão Geral", side = "left" })
-local StatusSection = MainTab:Section({ name = "Status dos Módulos", side = "right" })
+local StatusTitle = Instance.new("TextLabel")
+StatusTitle.Size = UDim2.new(1, 0, 0, 25)
+StatusTitle.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+StatusTitle.BorderSizePixel = 0
+StatusTitle.Text = "Status dos Módulos"
+StatusTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusTitle.TextScaled = true
+StatusTitle.Font = Enum.Font.Gotham
+StatusTitle.Parent = StatusFrame
 
-GeneralSection:Label("🎯 AirHub Premium - Versão Ultimate")
-GeneralSection:Label("📌 Módulos carregados automaticamente")
-GeneralSection:Separator("Informações")
-GeneralSection:Label("Aimbot: " .. (Aimbot and "✅ Ativo" or "❌ Falha"))
-GeneralSection:Label("ESP: " .. (ESP and "✅ Ativo" or "❌ Falha"))
-GeneralSection:Label("Hitbox: " .. (Hitbox and "✅ Ativo" or "❌ Falha"))
+local AimbotStatus = Instance.new("TextLabel")
+AimbotStatus.Size = UDim2.new(1, 0, 0, 20)
+AimbotStatus.Position = UDim2.new(0, 10, 0, 30)
+AimbotStatus.BackgroundTransparency = 1
+AimbotStatus.Text = "Aimbot: " .. (Aimbot and "✅ ATIVO" or "❌ FALHA")
+AimbotStatus.TextColor3 = Aimbot and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+AimbotStatus.TextXAlignment = Enum.TextXAlignment.Left
+AimbotStatus.TextScaled = true
+AimbotStatus.Font = Enum.Font.Gotham
+AimbotStatus.Parent = StatusFrame
 
--- ========== ABA AIMBOT ==========
-if Aimbot then
-    local AimbotMain = AimbotTab:Section({ name = "Configurações do Aimbot", side = "left" })
-    local AimbotFOV = AimbotTab:Section({ name = "Configurações do FOV", side = "right" })
-    
-    -- Main settings
-    AimbotMain:Toggle({
-        name = "Ativar Aimbot",
-        default = Aimbot.Settings.Enabled,
-        flag = "AimbotEnabled",
-        callback = function(v) Aimbot.Settings.Enabled = v end
-    })
-    
-    AimbotMain:Slider({
-        name = "Smoothness",
-        default = Aimbot.Settings.Smoothness,
-        min = 0.1,
-        max = 1,
-        float = 0.1,
-        flag = "AimbotSmoothness",
-        callback = function(v) Aimbot.Settings.Smoothness = v end
-    })
-    
-    AimbotMain:Dropdown({
-        name = "Parte do Corpo",
-        content = {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso"},
-        default = Aimbot.Settings.LockPart,
-        flag = "AimbotLockPart",
-        callback = function(v) Aimbot.Settings.LockPart = v end
-    })
-    
-    AimbotMain:Toggle({
-        name = "Team Check",
-        default = Aimbot.Settings.TeamCheck,
-        flag = "AimbotTeamCheck",
-        callback = function(v) Aimbot.Settings.TeamCheck = v end
-    })
-    
-    AimbotMain:Toggle({
-        name = "Wall Check",
-        default = Aimbot.Settings.WallCheck,
-        flag = "AimbotWallCheck",
-        callback = function(v) Aimbot.Settings.WallCheck = v end
-    })
-    
-    AimbotMain:Toggle({
-        name = "Alive Check",
-        default = Aimbot.Settings.AliveCheck,
-        flag = "AimbotAliveCheck",
-        callback = function(v) Aimbot.Settings.AliveCheck = v end
-    })
-    
-    AimbotMain:Keybind({
-        name = "Tecla de Atalho",
-        default = Enum.KeyCode[#Aimbot.Settings.TriggerKey == 1 and Aimbot.Settings.TriggerKey or "MouseButton2"],
-        flag = "AimbotKey",
-        callback = function(k) Aimbot.Settings.TriggerKey = k.Name end
-    })
-    
-    -- FOV Settings
-    AimbotFOV:Toggle({
-        name = "Ativar FOV",
-        default = Aimbot.FOVSettings.Enabled,
-        flag = "AimbotFOVEnabled",
-        callback = function(v) Aimbot.FOVSettings.Enabled = v end
-    })
-    
-    AimbotFOV:Slider({
-        name = "Tamanho do FOV",
-        default = Aimbot.FOVSettings.Amount,
-        min = 10,
-        max = 360,
-        flag = "AimbotFOVSize",
-        callback = function(v) Aimbot.FOVSettings.Amount = v end
-    })
-    
-    AimbotFOV:Slider({
-        name = "Transparência",
-        default = Aimbot.FOVSettings.Transparency * 10,
-        min = 0,
-        max = 10,
-        float = 1,
-        flag = "AimbotFOVTrans",
-        callback = function(v) Aimbot.FOVSettings.Transparency = v / 10 end
-    })
-    
-    AimbotFOV:ColorPicker({
-        name = "Cor do FOV",
-        default = Aimbot.FOVSettings.Color,
-        flag = "AimbotFOVColor",
-        callback = function(c) Aimbot.FOVSettings.Color = c end
-    })
-    
-    AimbotFOV:ColorPicker({
-        name = "Cor quando Travado",
-        default = Aimbot.FOVSettings.LockedColor,
-        flag = "AimbotFOVLockedColor",
-        callback = function(c) Aimbot.FOVSettings.LockedColor = c end
-    })
-else
-    AimbotTab:Section({ name = "Erro" }):Label("❌ Aimbot não carregado")
-end
+local ESPStatus = Instance.new("TextLabel")
+ESPStatus.Size = UDim2.new(1, 0, 0, 20)
+ESPStatus.Position = UDim2.new(0, 10, 0, 50)
+ESPStatus.BackgroundTransparency = 1
+ESPStatus.Text = "ESP: " .. (ESP and "✅ ATIVO" or "❌ FALHA")
+ESPStatus.TextColor3 = ESP and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+ESPStatus.TextXAlignment = Enum.TextXAlignment.Left
+ESPStatus.TextScaled = true
+ESPStatus.Font = Enum.Font.Gotham
+ESPStatus.Parent = StatusFrame
 
--- ========== ABA ESP ==========
-if ESP then
-    local ESPChecks = ESPTab:Section({ name = "Verificações", side = "left" })
-    local ESPMain = ESPTab:Section({ name = "Configurações ESP", side = "left" })
-    local ESPBoxes = ESPTab:Section({ name = "Configurações das Caixas", side = "right" })
-    local ESPTracers = ESPTab:Section({ name = "Configurações dos Tracers", side = "right" })
-    local ESPChams = ESPTab:Section({ name = "Configurações dos Chams", side = "right" })
+-- Botão Fly
+local FlyButton = Instance.new("TextButton")
+FlyButton.Size = UDim2.new(0, 150, 0, 40)
+FlyButton.Position = UDim2.new(0, 10, 0, 140)
+FlyButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+FlyButton.BorderSizePixel = 0
+FlyButton.Text = "Ativar Fly"
+FlyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+FlyButton.TextScaled = true
+FlyButton.Font = Enum.Font.Gotham
+FlyButton.Parent = MainFrame
+
+-- Velocidade Fly
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Size = UDim2.new(0, 100, 0, 30)
+SpeedLabel.Position = UDim2.new(0, 170, 0, 145)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "Velocidade: 50"
+SpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+SpeedLabel.TextScaled = true
+SpeedLabel.Font = Enum.Font.Gotham
+SpeedLabel.Parent = MainFrame
+
+local SpeedSlider = Instance.new("Frame")
+SpeedSlider.Size = UDim2.new(0, 200, 0, 20)
+SpeedSlider.Position = UDim2.new(0, 170, 0, 175)
+SpeedSlider.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+SpeedSlider.BorderSizePixel = 0
+SpeedSlider.Parent = MainFrame
+
+local SpeedSliderButton = Instance.new("TextButton")
+SpeedSliderButton.Size = UDim2.new(0.5, 0, 1, 0)
+SpeedSliderButton.BackgroundColor3 = Color3.fromRGB(255, 117, 24)
+SpeedSliderButton.BorderSizePixel = 0
+SpeedSliderButton.Text = ""
+SpeedSliderButton.Parent = SpeedSlider
+
+-- Função do Fly
+local flyActive = false
+FlyButton.MouseButton1Click:Connect(function()
+    flyActive = not flyActive
+    FlyButton.Text = flyActive and "Desativar Fly" or "Ativar Fly"
+    FlyButton.BackgroundColor3 = flyActive and Color3.fromRGB(255, 50, 50) or Color3.fromRGB(45, 45, 55)
+    ToggleFly(flyActive)
+end)
+
+-- Slider de velocidade (simplificado)
+SpeedSliderButton.MouseButton1Down:Connect(function()
+    local connection
+    connection = game:GetService("RunService").RenderStepped:Connect(function()
+        local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+        local sliderPos = SpeedSlider.AbsolutePosition.X
+        local sliderSize = SpeedSlider.AbsoluteSize.X
+        local relativePos = math.clamp(mousePos.X - sliderPos, 0, sliderSize)
+        local percent = relativePos / sliderSize
+        SpeedSliderButton.Size = UDim2.new(percent, 0, 1, 0)
+        Fly.Speed = math.floor(10 + (percent * 190))
+        SpeedLabel.Text = "Velocidade: " .. Fly.Speed
+    end)
     
-    -- Checks
-    ESPChecks:Toggle({
-        name = "Ativar ESP",
-        default = ESP.Settings.Enabled,
-        flag = "ESPEnabled",
-        callback = function(v) ESP.Settings.Enabled = v end
-    })
-    
-    ESPChecks:Toggle({
-        name = "Team Check",
-        default = ESP.Settings.TeamCheck,
-        flag = "ESPTeamCheck",
-        callback = function(v) ESP.Settings.TeamCheck = v end
-    })
-    
-    ESPChecks:Toggle({
-        name = "Alive Check",
-        default = ESP.Settings.AliveCheck,
-        flag = "ESPAliveCheck",
-        callback = function(v) ESP.Settings.AliveCheck = v end
-    })
-    
-    -- ESP Settings
-    ESPMain:Toggle({
-        name = "Mostrar Nomes",
-        default = ESP.Visuals.ESPSettings.DisplayName,
-        flag = "ESPDisplayName",
-        callback = function(v) ESP.Visuals.ESPSettings.DisplayName = v end
-    })
-    
-    ESPMain:Toggle({
-        name = "Mostrar Distância",
-        default = ESP.Visuals.ESPSettings.DisplayDistance,
-        flag = "ESPDisplayDistance",
-        callback = function(v) ESP.Visuals.ESPSettings.DisplayDistance = v end
-    })
-    
-    ESPMain:Toggle({
-        name = "Mostrar Vida",
-        default = ESP.Visuals.ESPSettings.DisplayHealth,
-        flag = "ESPDisplayHealth",
-        callback = function(v) ESP.Visuals.ESPSettings.DisplayHealth = v end
-    })
-    
-    ESPMain:ColorPicker({
-        name = "Cor do Texto",
-        default = ESP.Visuals.ESPSettings.TextColor,
-        flag = "ESPTextColor",
-        callback = function(c) ESP.Visuals.ESPSettings.TextColor = c end
-    })
-    
-    -- Box Settings
-    ESPBoxes:Toggle({
-        name = "Mostrar Caixas",
-        default = ESP.Visuals.BoxSettings.Enabled,
-        flag = "ESPBoxEnabled",
-        callback = function(v) ESP.Visuals.BoxSettings.Enabled = v end
-    })
-    
-    ESPBoxes:Dropdown({
-        name = "Tipo de Caixa",
-        content = {"3D", "2D"},
-        default = ESP.Visuals.BoxSettings.Type == 1 and "3D" or "2D",
-        flag = "ESPBoxType",
-        callback = function(v) ESP.Visuals.BoxSettings.Type = v == "3D" and 1 or 2 end
-    })
-    
-    ESPBoxes:ColorPicker({
-        name = "Cor das Caixas",
-        default = ESP.Visuals.BoxSettings.Color,
-        flag = "ESPBoxColor",
-        callback = function(c) ESP.Visuals.BoxSettings.Color = c end
-    })
-    
-    ESPBoxes:Slider({
-        name = "Transparência",
-        default = ESP.Visuals.BoxSettings.Transparency * 10,
-        min = 0,
-        max = 10,
-        float = 1,
-        flag = "ESPBoxTrans",
-        callback = function(v) ESP.Visuals.BoxSettings.Transparency = v / 10 end
-    })
-    
-    -- Tracer Settings
-    ESPTracers:Toggle({
-        name = "Mostrar Tracers",
-        default = ESP.Visuals.TracersSettings.Enabled,
-        flag = "ESPTracersEnabled",
-        callback = function(v) ESP.Visuals.TracersSettings.Enabled = v end
-    })
-    
-    ESPTracers:Dropdown({
-        name = "Origem do Tracer",
-        content = {"Bottom", "Center", "Mouse"},
-        default = ESP.Visuals.TracersSettings.Type == 1 and "Bottom" or ESP.Visuals.TracersSettings.Type == 2 and "Center" or "Mouse",
-        flag = "ESPTracersType",
-        callback = function(v) 
-            ESP.Visuals.TracersSettings.Type = v == "Bottom" and 1 or v == "Center" and 2 or 3
+    game:GetService("UserInputService").InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            connection:Disconnect()
         end
-    })
-    
-    ESPTracers:ColorPicker({
-        name = "Cor dos Tracers",
-        default = ESP.Visuals.TracersSettings.Color,
-        flag = "ESPTracersColor",
-        callback = function(c) ESP.Visuals.TracersSettings.Color = c end
-    })
-    
-    -- Chams Settings
-    ESPChams:Toggle({
-        name = "Ativar Chams",
-        default = ESP.Visuals.ChamsSettings.Enabled,
-        flag = "ESPChamsEnabled",
-        callback = function(v) ESP.Visuals.ChamsSettings.Enabled = v end
-    })
-    
-    ESPChams:ColorPicker({
-        name = "Cor dos Chams",
-        default = ESP.Visuals.ChamsSettings.Color,
-        flag = "ESPChamsColor",
-        callback = function(c) ESP.Visuals.ChamsSettings.Color = c end
-    })
-    
-    ESPChams:Slider({
-        name = "Transparência",
-        default = ESP.Visuals.ChamsSettings.Transparency * 10,
-        min = 0,
-        max = 10,
-        float = 1,
-        flag = "ESPChamsTrans",
-        callback = function(v) ESP.Visuals.ChamsSettings.Transparency = v / 10 end
-    })
-else
-    ESPTab:Section({ name = "Erro" }):Label("❌ ESP não carregado")
-end
+    end)
+end)
 
--- ========== ABA DIVERSOS (FLY + HITBOX) ==========
-local FlySection = MiscTab:Section({ name = "Sistema de Voo", side = "left" })
-local HitboxSection = MiscTab:Section({ name = "Hitbox Extender", side = "right" })
-local HitboxConfig = MiscTab:Section({ name = "Configurações da Hitbox", side = "right" })
+-- Instruções
+local Instructions = Instance.new("TextLabel")
+Instructions.Size = UDim2.new(1, -20, 0, 100)
+Instructions.Position = UDim2.new(0, 10, 0, 200)
+Instructions.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+Instructions.BorderSizePixel = 0
+Instructions.Text = "Controles Fly:\nWASD - Movimento\nEspaço - Subir\nShift - Descer"
+Instructions.TextColor3 = Color3.fromRGB(200, 200, 200)
+Instructions.TextWrapped = true
+Instructions.TextScaled = true
+Instructions.Font = Enum.Font.Gotham
+Instructions.Parent = MainFrame
 
--- FLY
-FlySection:Toggle({
-    name = "Ativar Fly",
-    default = Fly.Enabled,
-    flag = "FlyEnabled",
-    callback = function(v) 
-        Fly.Enabled = v
-        ToggleFly(v)
-    end
-})
+-- Botão Fechar
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextScaled = true
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = MainFrame
 
-FlySection:Slider({
-    name = "Velocidade",
-    default = Fly.Speed,
-    min = 10,
-    max = 200,
-    flag = "FlySpeed",
-    callback = function(v) Fly.Speed = v end
-})
-
-FlySection:Label("Controles:")
-FlySection:Label("WASD - Movimento")
-FlySection:Label("Espaço - Subir")
-FlySection:Label("Shift - Descer")
-
--- HITBOX (se carregada)
-if extender then
-    HitboxSection:Toggle({
-        name = "Ativar Hitbox",
-        default = HitboxSettings.Enabled,
-        flag = "HitboxEnabled",
-        callback = function(v)
-            HitboxSettings.Enabled = v
-            if v then extender:Start() else extender:Stop() end
-        end
-    })
-    
-    HitboxSection:Dropdown({
-        name = "Parte do Corpo",
-        content = {"Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso"},
-        default = HitboxSettings.TargetLimb,
-        flag = "HitboxTarget",
-        callback = function(v)
-            HitboxSettings.TargetLimb = v
-            extender:Set("TARGET_LIMB", v)
-        end
-    })
-    
-    HitboxConfig:Slider({
-        name = "Tamanho",
-        default = HitboxSettings.Size,
-        min = 5,
-        max = 30,
-        flag = "HitboxSize",
-        callback = function(v)
-            HitboxSettings.Size = v
-            extender:Set("LIMB_SIZE", v)
-        end
-    })
-    
-    HitboxConfig:Slider({
-        name = "Transparência",
-        default = HitboxSettings.Transparency * 10,
-        min = 0,
-        max = 10,
-        float = 1,
-        flag = "HitboxTrans",
-        callback = function(v)
-            HitboxSettings.Transparency = v / 10
-            extender:Set("LIMB_TRANSPARENCY", v / 10)
-        end
-    })
-    
-    HitboxConfig:Toggle({
-        name = "Team Check",
-        default = HitboxSettings.TeamCheck,
-        flag = "HitboxTeamCheck",
-        callback = function(v)
-            HitboxSettings.TeamCheck = v
-            extender:Set("TEAM_CHECK", v)
-        end
-    })
-    
-    HitboxConfig:Toggle({
-        name = "Usar Highlight",
-        default = HitboxSettings.UseHighlight,
-        flag = "HitboxHighlight",
-        callback = function(v)
-            HitboxSettings.UseHighlight = v
-            extender:Set("USE_HIGHLIGHT", v)
-        end
-    })
-    
-    HitboxConfig:ColorPicker({
-        name = "Cor do Highlight",
-        default = HitboxSettings.HighlightColor,
-        flag = "HitboxHighlightColor",
-        callback = function(c)
-            HitboxSettings.HighlightColor = c
-            extender:Set("HIGHLIGHT_FILL_COLOR", c)
-        end
-    })
-else
-    HitboxSection:Label("❌ Hitbox não carregado")
-end
-
--- ========== ABA CONFIGURAÇÕES ==========
-local ConfigSection = ConfigTab:Section({ name = "Configurações do Menu", side = "left" })
-local ProfilesSection = ConfigTab:Section({ name = "Perfis de Configuração", side = "right" })
-
-ConfigSection:Keybind({
-    name = "Mostrar/Esconder GUI",
-    default = Enum.KeyCode.RightShift,
-    flag = "MenuToggleKey",
-    callback = function(k)
-        -- A biblioteca já tem sistema próprio para isso
-    end
-})
-
-ConfigSection:Button({
-    name = "Fechar GUI",
-    callback = function()
-        Window:Close()
-    end
-})
-
-ConfigSection:Button({
-    name = "Descarregar Script",
-    callback = function()
-        if Aimbot and Aimbot.Functions then Aimbot.Functions:Exit() end
-        if ESP and ESP.Functions then ESP.Functions:Exit() end
-        if extender and extender.Destroy then extender:Destroy() end
-        Window:Unload()
-    end
-})
-
--- Sistema de perfis (se a biblioteca suportar)
-ProfilesSection:Label("Sistema de perfis disponível")
-ProfilesSection:Label("Use as flags para salvar configurações")
+CloseButton.MouseButton1Click:Connect(function()
+    if flyActive then ToggleFly(false) end
+    ScreenGui:Destroy()
+end)
 
 print("✅ AirHub Premium carregado com sucesso!")
 print("🎯 Aimbot | 👁️ ESP | ✈️ Fly | 💪 Hitbox")
