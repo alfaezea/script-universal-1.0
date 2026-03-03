@@ -55,10 +55,18 @@ else
     warn("❌ Erro no ESP: " .. tostring(espErr))
 end
 
--- Carregar Aimbot
-loadModule("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua", "Aimbot")
+-- Carregar Aimbot (VERSÃO MODIFICADA COM TEclAS E PARTES)
+print("🔄 Carregando Aimbot...")
+local aimbotScript = game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/aimbot.lua")
+local aimbotFunc, aimbotErr = loadstring(aimbotScript)
+if aimbotFunc then
+    pcall(aimbotFunc)
+    print("✅ Aimbot carregado!")
+else
+    warn("❌ Erro no Aimbot: " .. tostring(aimbotErr))
+end
 
--- Carregar Módulo Diversos (URL CORRETA)
+-- Carregar Módulo Diversos
 print("🔄 Carregando Módulo Diversos...")
 local diversosScript = game:HttpGet("https://raw.githubusercontent.com/alfaezea/script-universal-1.0/refs/heads/main/diversos.lua")
 local diversosFunc, diversosErr = loadstring(diversosScript)
@@ -672,77 +680,6 @@ else
     err.Parent = espContent
 end
 
--- ========== CONTEÚDO AIMBOT ==========
-local aimbotContent = Instance.new("ScrollingFrame")
-aimbotContent.Size = UDim2.new(1, 0, 1, 0)
-aimbotContent.BackgroundTransparency = 1
-aimbotContent.BorderSizePixel = 0
-aimbotContent.ScrollBarThickness = 5
-aimbotContent.CanvasSize = UDim2.new(0, 0, 0, 500)
-aimbotContent.Visible = false
-aimbotContent.Parent = ContentFrame
-
-if Aimbot then
-    local yPos = 10
-    
-    createToggle(aimbotContent, "Ativar Aimbot", yPos,
-        function() return Aimbot.Settings.Enabled end,
-        function(v) Aimbot.Settings.Enabled = v end)
-    yPos = yPos + 45
-    
-    createToggle(aimbotContent, "Ativar FOV", yPos,
-        function() return Aimbot.FOVSettings.Enabled end,
-        function(v) Aimbot.FOVSettings.Enabled = v end)
-    yPos = yPos + 45
-    
-    createToggle(aimbotContent, "Team Check", yPos,
-        function() return Aimbot.Settings.TeamCheck end,
-        function(v) Aimbot.Settings.TeamCheck = v end)
-    yPos = yPos + 45
-    
-    createToggle(aimbotContent, "Wall Check", yPos,
-        function() return Aimbot.Settings.WallCheck end,
-        function(v) Aimbot.Settings.WallCheck = v end)
-    yPos = yPos + 45
-    
-    createToggle(aimbotContent, "Alive Check", yPos,
-        function() return Aimbot.Settings.AliveCheck end,
-        function(v) Aimbot.Settings.AliveCheck = v end)
-    yPos = yPos + 45
-    
-    createToggle(aimbotContent, "Toggle Mode", yPos,
-        function() return Aimbot.Settings.Toggle end,
-        function(v) Aimbot.Settings.Toggle = v end)
-    yPos = yPos + 45
-    
-    createSlider(aimbotContent, "Smoothness", yPos, 0.1, 1,
-        function() return Aimbot.Settings.Smoothness end,
-        function(v) Aimbot.Settings.Smoothness = v end, "float")
-    yPos = yPos + 60
-    
-    createSlider(aimbotContent, "FOV Size", yPos, 10, 360,
-        function() return Aimbot.FOVSettings.Amount end,
-        function(v) Aimbot.FOVSettings.Amount = v end, "int")
-    yPos = yPos + 60
-    
-    createSlider(aimbotContent, "FOV Transparency", yPos, 0, 1,
-        function() return Aimbot.FOVSettings.Transparency end,
-        function(v) Aimbot.FOVSettings.Transparency = v end, "float")
-    yPos = yPos + 60
-    
-    aimbotContent.CanvasSize = UDim2.new(0, 0, 0, yPos + 20)
-else
-    local err = Instance.new("TextLabel")
-    err.Size = UDim2.new(1, 0, 0, 50)
-    err.Position = UDim2.new(0, 0, 0, 20)
-    err.BackgroundTransparency = 1
-    err.Text = "❌ Aimbot não carregado!"
-    err.TextColor3 = Color3.fromRGB(255, 0, 0)
-    err.TextScaled = true
-    err.Font = Enum.Font.Gotham
-    err.Parent = aimbotContent
-end
-
 -- ========== CONTEÚDO AIMBOT (ULTRA COMPLETO) ==========
 local aimbotContent = Instance.new("ScrollingFrame")
 aimbotContent.Size = UDim2.new(1, 0, 1, 0)
@@ -789,7 +726,7 @@ if Aimbot then
     secPart.Parent = aimbotContent
     yPos = yPos + 30
     
-    -- Dropdown de partes (TODAS as partes R6 e R15)
+    -- Dropdown de partes
     local partLabel = Instance.new("TextLabel")
     partLabel.Size = UDim2.new(0, 200, 0, 30)
     partLabel.Position = UDim2.new(0, 20, 0, yPos)
@@ -823,7 +760,6 @@ if Aimbot then
     partBtn.Font = Enum.Font.Gotham
     partBtn.Parent = aimbotContent
     
-    -- Lista COMPLETA de partes
     local partsList = {
         "Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso",
         "Left Arm", "Right Arm", "LeftUpperArm", "LeftLowerArm", "LeftHand",
@@ -861,8 +797,8 @@ if Aimbot then
     secMode.Parent = aimbotContent
     yPos = yPos + 30
     
-    -- MODO AUTOMÁTICO (gruda sozinho)
-    local autoToggle = createToggle(aimbotContent, "🤖 Modo Automático (gruda sozinho)", yPos,
+    -- MODO AUTOMÁTICO
+    createToggle(aimbotContent, "🤖 Modo Automático (gruda sozinho)", yPos,
         function() return Aimbot.Settings.Auto end,
         function(v) 
             Aimbot.Settings.Auto = v
@@ -872,7 +808,7 @@ if Aimbot then
         end)
     yPos = yPos + 45
     
-    -- Só mostra as opções de tecla se NÃO estiver no modo automático
+    -- Opções de tecla (se não for auto)
     if not Aimbot.Settings.Auto then
         -- TECLA ATUAL
         local keyLabel = Instance.new("TextLabel")
@@ -915,7 +851,6 @@ if Aimbot then
             learnBtn.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
             keyDisplay.Text = "?"
             
-            -- Timer de 5 segundos
             task.delay(5, function()
                 if Aimbot.Settings.Learning then
                     Aimbot.Settings.Learning = false
@@ -925,9 +860,8 @@ if Aimbot then
                 end
             end)
             
-            -- Atualiza quando aprender
             local conn
-            conn = game:GetService("RunService").Stepped:Connect(function()
+            conn = RunService.Stepped:Connect(function()
                 if not Aimbot.Settings.Learning then
                     keyDisplay.Text = Aimbot.Settings.TriggerKey
                     learnBtn.Text = "🎤 Gravar Tecla"
@@ -967,7 +901,6 @@ if Aimbot then
         end)
         yPos = yPos + 40
     else
-        -- Mensagem quando está em modo automático
         local autoMsg = Instance.new("TextLabel")
         autoMsg.Size = UDim2.new(1, -40, 0, 30)
         autoMsg.Position = UDim2.new(0, 20, 0, yPos)
@@ -1004,19 +937,16 @@ if Aimbot then
     secFOV.Parent = aimbotContent
     yPos = yPos + 30
     
-    -- Ativar FOV
     createToggle(aimbotContent, "👁️ Ativar FOV", yPos,
         function() return Aimbot.FOVSettings.Enabled end,
         function(v) Aimbot.FOVSettings.Enabled = v end)
     yPos = yPos + 45
     
-    -- Tamanho do FOV
     createSlider(aimbotContent, "Tamanho do FOV", yPos, 10, 360,
         function() return Aimbot.FOVSettings.Amount end,
         function(v) Aimbot.FOVSettings.Amount = v end, "int")
     yPos = yPos + 60
     
-    -- Transparência do FOV
     createSlider(aimbotContent, "Transparência do FOV", yPos, 0, 1,
         function() return Aimbot.FOVSettings.Transparency end,
         function(v) Aimbot.FOVSettings.Transparency = v end, "float")
@@ -1045,19 +975,16 @@ if Aimbot then
     secChecks.Parent = aimbotContent
     yPos = yPos + 30
     
-    -- Team Check
     createToggle(aimbotContent, "👥 Team Check", yPos,
         function() return Aimbot.Settings.TeamCheck end,
         function(v) Aimbot.Settings.TeamCheck = v end)
     yPos = yPos + 45
     
-    -- Wall Check
     createToggle(aimbotContent, "🧱 Wall Check", yPos,
         function() return Aimbot.Settings.WallCheck end,
         function(v) Aimbot.Settings.WallCheck = v end)
     yPos = yPos + 45
     
-    -- Alive Check
     createToggle(aimbotContent, "💀 Alive Check", yPos,
         function() return Aimbot.Settings.AliveCheck end,
         function(v) Aimbot.Settings.AliveCheck = v end)
@@ -1086,13 +1013,11 @@ if Aimbot then
     secSmooth.Parent = aimbotContent
     yPos = yPos + 30
     
-    -- Smoothness
     createSlider(aimbotContent, "Smoothness", yPos, 0.1, 1,
         function() return Aimbot.Settings.Smoothness end,
         function(v) Aimbot.Settings.Smoothness = v end, "float")
     yPos = yPos + 60
     
-    -- Dica de smoothness
     local dica = Instance.new("TextLabel")
     dica.Size = UDim2.new(1, -40, 0, 30)
     dica.Position = UDim2.new(0, 20, 0, yPos)
@@ -1111,13 +1036,39 @@ else
     err.Size = UDim2.new(1, 0, 0, 100)
     err.Position = UDim2.new(0, 0, 0, 20)
     err.BackgroundTransparency = 1
-    err.Text = "❌ AIMBOT NÃO CARREGADO!\n\nVerifique se o script do aimbot está correto"
+    err.Text = "❌ AIMBOT NÃO CARREGADO!"
     err.TextColor3 = Color3.fromRGB(255, 0, 0)
     err.TextWrapped = true
     err.TextScaled = true
     err.Font = Enum.Font.Gotham
     err.Parent = aimbotContent
 end
+
+-- ========== CONTEÚDO DIVERSOS ==========
+local diversosContent = Instance.new("ScrollingFrame")
+diversosContent.Size = UDim2.new(1, 0, 1, 0)
+diversosContent.BackgroundTransparency = 1
+diversosContent.BorderSizePixel = 0
+diversosContent.ScrollBarThickness = 5
+diversosContent.CanvasSize = UDim2.new(0, 0, 0, 800)
+diversosContent.Visible = false
+diversosContent.Parent = ContentFrame
+
+if Diversos then
+    local yPos = 10
+    
+    -- TÍTULO PRINCIPAL
+    local titleDiv = Instance.new("TextLabel")
+    titleDiv.Size = UDim2.new(1, -20, 0, 35)
+    titleDiv.Position = UDim2.new(0, 10, 0, yPos)
+    titleDiv.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
+    titleDiv.BorderSizePixel = 0
+    titleDiv.Text = "⚙️ MÓDULO DIVERSOS ⚙️"
+    titleDiv.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleDiv.TextScaled = true
+    titleDiv.Font = Enum.Font.GothamBold
+    titleDiv.Parent = diversosContent
+    yPos = yPos + 45
     
     -- ===== SEÇÃO: ANTI-SPREAD =====
     local secAS = Instance.new("TextLabel")
@@ -1139,7 +1090,7 @@ end
         function(v) Diversos:ToggleAntiSpread(v) end)
     yPos = yPos + 45
     
-    -- Precisão (Accuracy)
+    -- Precisão
     createSlider(diversosContent, "Precisão", yPos, 0, 100,
         function() return Diversos.Settings.AntiSpread.Accuracy end,
         function(v) 
@@ -1151,7 +1102,7 @@ end
         end, "int")
     yPos = yPos + 60
     
-    -- Modo do Anti-Spread
+    -- Modo
     local modeLabel = Instance.new("TextLabel")
     modeLabel.Size = UDim2.new(0, 200, 0, 30)
     modeLabel.Position = UDim2.new(0, 20, 0, yPos)
@@ -1188,7 +1139,7 @@ end
     end)
     yPos = yPos + 40
     
-    -- Hotkey Anti-Spread
+    -- Hotkey
     local hotkeyLabel = Instance.new("TextLabel")
     hotkeyLabel.Size = UDim2.new(0, 200, 0, 30)
     hotkeyLabel.Position = UDim2.new(0, 20, 0, yPos)
@@ -1230,7 +1181,7 @@ end
         function(v) Diversos:ToggleNoClip(v) end)
     yPos = yPos + 45
     
-    -- Velocidade No Clip
+    -- Velocidade
     createSlider(diversosContent, "Velocidade", yPos, 16, 200,
         function() return Diversos.Settings.NoClip.Speed end,
         function(v) 
@@ -1242,7 +1193,7 @@ end
         end, "int")
     yPos = yPos + 60
     
-    -- Toggle Ignorar Água
+    -- Ignorar Água
     createToggle(diversosContent, "💧 Ignorar Água", yPos,
         function() return Diversos.Settings.NoClip.IgnoreWater end,
         function(v) 
@@ -1254,7 +1205,7 @@ end
         end)
     yPos = yPos + 45
     
-    -- Hotkey No Clip
+    -- Hotkey
     local hotkeyNC = Instance.new("TextLabel")
     hotkeyNC.Size = UDim2.new(0, 200, 0, 30)
     hotkeyNC.Position = UDim2.new(0, 20, 0, yPos)
@@ -1296,7 +1247,7 @@ end
         function(v) Diversos:ToggleInfiniteJump(v) end)
     yPos = yPos + 45
     
-    -- Altura do Pulo
+    -- Altura
     createSlider(diversosContent, "Altura do Pulo", yPos, 20, 200,
         function() return Diversos.Settings.InfiniteJump.Height end,
         function(v) 
@@ -1320,7 +1271,7 @@ end
         end)
     yPos = yPos + 45
     
-    -- Hotkey Infinite Jump
+    -- Hotkey
     local hotkeyIJ = Instance.new("TextLabel")
     hotkeyIJ.Size = UDim2.new(0, 200, 0, 30)
     hotkeyIJ.Position = UDim2.new(0, 20, 0, yPos)
@@ -1353,7 +1304,7 @@ else
     err.Size = UDim2.new(1, 0, 0, 100)
     err.Position = UDim2.new(0, 0, 0, 20)
     err.BackgroundTransparency = 1
-    err.Text = "❌ MÓDULO DIVERSOS NÃO CARREGADO!\n\nVerifique a URL do módulo"
+    err.Text = "❌ MÓDULO DIVERSOS NÃO CARREGADO!"
     err.TextColor3 = Color3.fromRGB(255, 0, 0)
     err.TextWrapped = true
     err.TextScaled = true
@@ -1436,5 +1387,5 @@ espContent.Visible = true
 tabESP.BackgroundColor3 = Color3.fromRGB(255, 128, 0)
 
 print("✅ AirHub Premium carregado com sucesso!")
-print("📌 ESP AVANÇADO + DIVERSOS (Anti-Spread, No Clip, Infinite Jump)")
+print("📌 ESP AVANÇADO + AIMBOT COMPLETO + DIVERSOS")
 print("⚡ Hotkeys: F1=AntiSpread | F2=NoClip | F3=InfiniteJump")
